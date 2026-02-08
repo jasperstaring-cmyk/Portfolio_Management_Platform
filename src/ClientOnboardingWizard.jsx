@@ -269,7 +269,29 @@ export default function ClientOnboardingWizard({ portfolios, universeProducts, o
 
         <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(148,163,184,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>New Client Onboarding</h2>
-          <button onClick={onCancel} style={{ padding: '0.5rem', background: 'rgba(148,163,184,0.1)', border: 'none', borderRadius: '8px', color: '#f1f5f9', cursor: 'pointer' }}>
+          <button
+            onClick={onCancel}
+            title="Close and exit"
+            style={{
+              padding: '0.75rem',
+              background: 'rgba(239,68,68,0.1)',
+              border: '1px solid rgba(239,68,68,0.3)',
+              borderRadius: '8px',
+              color: '#ef4444',
+              cursor: 'pointer',
+              fontSize: '1.125rem',
+              fontWeight: 700,
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = 'rgba(239,68,68,0.2)';
+              e.currentTarget.style.borderColor = 'rgba(239,68,68,0.5)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = 'rgba(239,68,68,0.1)';
+              e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)';
+            }}
+          >
             <X />
           </button>
         </div>
@@ -748,19 +770,32 @@ export default function ClientOnboardingWizard({ portfolios, universeProducts, o
           )}
         </div>
 
-        <div style={{ padding: '1.5rem', borderTop: '1px solid rgba(148,163,184,0.1)', display: 'flex', justifyContent: 'space-between' }}>
-          <button
-            onClick={handleBack}
-            disabled={currentStep === 1}
-            style={{
-              ...s.btn,
-              background: 'rgba(148,163,184,0.2)',
-              opacity: currentStep === 1 ? 0.5 : 1,
-              cursor: currentStep === 1 ? 'not-allowed' : 'pointer'
-            }}
-          >
-            <ChevronLeft /> Back
-          </button>
+        <div style={{ padding: '1.5rem', borderTop: '1px solid rgba(148,163,184,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem' }}>
+          <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <button
+              onClick={handleBack}
+              disabled={currentStep === 1}
+              style={{
+                ...s.btn,
+                background: 'rgba(148,163,184,0.2)',
+                opacity: currentStep === 1 ? 0.5 : 1,
+                cursor: currentStep === 1 ? 'not-allowed' : 'pointer'
+              }}
+            >
+              <ChevronLeft /> Back
+            </button>
+            <button
+              onClick={onCancel}
+              style={{
+                ...s.btn,
+                background: 'rgba(239,68,68,0.1)',
+                border: '1px solid rgba(239,68,68,0.3)',
+                color: '#ef4444'
+              }}
+            >
+              <X /> Cancel
+            </button>
+          </div>
 
           {currentStep < 5 ? (
             <button
