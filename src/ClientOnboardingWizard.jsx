@@ -1,4 +1,12 @@
 import React, { useState, useMemo } from 'react';
+import { getActiveGoalTemplates, createGoalFromTemplate } from './utils/GoalTemplates';
+import {
+  calculateAccumulationFeasibility,
+  calculatePreservationMetrics,
+  checkDrawdownCompliance,
+  formatCurrency,
+  getHealthStatusColor
+} from './utils/GoalCalculations';
 
 const Icon = ({ d, size = 18 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d={d}/></svg>;
 const ChevronRight = () => <Icon d="M9 18l6-6-6-6" />;
@@ -8,6 +16,8 @@ const X = () => <Icon d="M18 6L6 18M6 6l12 12" />;
 const Plus = () => <Icon d="M12 5v14M5 12h14" />;
 const Trash = () => <Icon d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />;
 const Target = () => <Icon d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 4a6 6 0 1 0 0 12 6 6 0 0 0 0-12zm0 3a3 3 0 1 0 0 6 3 3 0 0 0 0-6z" />;
+const Shield = () => <Icon d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />;
+const AlertTriangle = () => <Icon d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01" />;
 
 const RISK_QUESTIONS = [
   {
@@ -67,14 +77,6 @@ const RISK_QUESTIONS = [
   }
 ];
 
-const GOAL_PRESETS = [
-  { name: 'Retirement', icon: '🏖️', suggestedHorizon: 20 },
-  { name: 'Education', icon: '🎓', suggestedHorizon: 10 },
-  { name: 'Home Purchase', icon: '🏠', suggestedHorizon: 5 },
-  { name: 'Emergency Fund', icon: '💰', suggestedHorizon: 1 },
-  { name: 'Wealth Building', icon: '📈', suggestedHorizon: 15 },
-  { name: 'Custom Goal', icon: '🎯', suggestedHorizon: 10 }
-];
 
 const calculateRiskScore = (answers) => {
   const scores = Object.values(answers);
@@ -130,13 +132,24 @@ export default function ClientOnboardingWizard({ portfolios, universeProducts, o
   const [riskAnswers, setRiskAnswers] = useState({});
   const [goals, setGoals] = useState([]);
   const [editingGoalIndex, setEditingGoalIndex] = useState(null);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [goalForm, setGoalForm] = useState({
-    name: '',
+    goalName: '',
+    goalType: 'accumulation',
+    goalTemplateId: '',
+    initialInvestment: '',
+    monthlyContribution: '',
+    timeHorizonYears: '',
     targetAmount: '',
-    timeHorizon: '',
-    portfolioId: '',
-    customPortfolio: false
+    currentPortfolioValue: '',
+    inflationBenchmark: 3,
+    targetExcessReturn: 2,
+    maxAllowableDrawdown: 20,
+    expectedReturn: 5,
+    portfolioId: ''
   });
+
+  const goalTemplates = useMemo(() => getActiveGoalTemplates(), []);
 
   const riskScore = useMemo(() => calculateRiskScore(riskAnswers), [riskAnswers]);
   const riskLevel = useMemo(() => getRiskLevel(riskScore), [riskScore]);
@@ -146,7 +159,13 @@ export default function ClientOnboardingWizard({ portfolios, universeProducts, o
   );
 
   const totalAUM = useMemo(() =>
-    goals.reduce((sum, g) => sum + (parseFloat(g.targetAmount) || 0), 0),
+    goals.reduce((sum, g) => {
+      if (g.goalType === 'accumulation') {
+        return sum + (parseFloat(g.targetAmount) || 0);
+      } else {
+        return sum + (parseFloat(g.currentPortfolioValue) || 0);
+      }
+    }, 0),
     [goals]
   );
 
@@ -156,7 +175,10 @@ export default function ClientOnboardingWizard({ portfolios, universeProducts, o
       const portfolio = portfolios.find(p => p.id === goal.portfolioId);
       if (!portfolio) return;
 
-      const goalWeight = (parseFloat(goal.targetAmount) || 0) / totalAUM;
+      const goalValue = goal.goalType === 'accumulation'
+        ? (parseFloat(goal.targetAmount) || 0)
+        : (parseFloat(goal.currentPortfolioValue) || 0);
+      const goalWeight = goalValue / totalAUM;
 
       portfolio.holdings.forEach(holding => {
         const product = universeProducts.find(p => p.id === holding.productId);
@@ -204,33 +226,106 @@ export default function ClientOnboardingWizard({ portfolios, universeProducts, o
   };
 
   const handleAddGoal = () => {
-    if (!goalForm.name || !goalForm.targetAmount || !goalForm.timeHorizon) return;
+    if (!goalForm.goalName) return;
 
-    const newGoal = {
+    if (goalForm.goalType === 'accumulation') {
+      if (!goalForm.initialInvestment || !goalForm.timeHorizonYears || !goalForm.targetAmount) return;
+    } else {
+      if (!goalForm.currentPortfolioValue || !goalForm.inflationBenchmark) return;
+    }
+
+    let calculatedGoal = {
       id: Date.now(),
       ...goalForm,
-      targetAmount: parseFloat(goalForm.targetAmount)
+      status: 'active',
+      createdAt: new Date().toISOString()
     };
+
+    if (goalForm.goalType === 'accumulation') {
+      const result = calculateAccumulationFeasibility(
+        parseFloat(goalForm.initialInvestment),
+        parseFloat(goalForm.monthlyContribution || 0),
+        parseInt(goalForm.timeHorizonYears),
+        parseFloat(goalForm.targetAmount),
+        parseFloat(goalForm.expectedReturn)
+      );
+      calculatedGoal.feasibilityScore = result.feasibilityScore;
+      calculatedGoal.healthStatus = result.healthStatus;
+      calculatedGoal.projectedAmount = result.projectedAmount;
+    } else {
+      const result = calculatePreservationMetrics(
+        parseFloat(goalForm.currentPortfolioValue),
+        parseFloat(goalForm.inflationBenchmark),
+        parseFloat(goalForm.targetExcessReturn),
+        parseFloat(goalForm.expectedReturn)
+      );
+      calculatedGoal.feasibilityScore = result.feasibilityScore;
+      calculatedGoal.healthStatus = result.healthStatus;
+      calculatedGoal.realReturn = result.realReturn;
+    }
 
     if (editingGoalIndex !== null) {
       const updated = [...goals];
-      updated[editingGoalIndex] = newGoal;
+      updated[editingGoalIndex] = calculatedGoal;
       setGoals(updated);
       setEditingGoalIndex(null);
     } else {
-      setGoals([...goals, newGoal]);
+      setGoals([...goals, calculatedGoal]);
     }
 
-    setGoalForm({ name: '', targetAmount: '', timeHorizon: '', portfolioId: '', customPortfolio: false });
+    setGoalForm({
+      goalName: '',
+      goalType: 'accumulation',
+      goalTemplateId: '',
+      initialInvestment: '',
+      monthlyContribution: '',
+      timeHorizonYears: '',
+      targetAmount: '',
+      currentPortfolioValue: '',
+      inflationBenchmark: 3,
+      targetExcessReturn: 2,
+      maxAllowableDrawdown: 20,
+      expectedReturn: 5,
+      portfolioId: ''
+    });
+    setSelectedTemplate(null);
   };
 
   const handleEditGoal = (index) => {
     setEditingGoalIndex(index);
-    setGoalForm(goals[index]);
+    const goal = goals[index];
+    setGoalForm(goal);
+    if (goal.goalTemplateId) {
+      const template = goalTemplates.find(t => t.id === goal.goalTemplateId);
+      setSelectedTemplate(template);
+    }
   };
 
   const handleDeleteGoal = (index) => {
     setGoals(goals.filter((_, i) => i !== index));
+    if (editingGoalIndex === index) {
+      setEditingGoalIndex(null);
+      setSelectedTemplate(null);
+    }
+  };
+
+  const handleTemplateSelect = (template) => {
+    setSelectedTemplate(template);
+    setGoalForm({
+      goalName: template.name,
+      goalType: template.goalType,
+      goalTemplateId: template.id,
+      initialInvestment: template.defaultInitialInvestment || '',
+      monthlyContribution: template.defaultMonthlyContribution || '',
+      timeHorizonYears: template.defaultTimeHorizonYears || '',
+      targetAmount: template.defaultTargetAmount || '',
+      currentPortfolioValue: template.defaultCurrentPortfolioValue || '',
+      inflationBenchmark: template.defaultInflationBenchmark || 3,
+      targetExcessReturn: template.defaultTargetExcessReturn || 2,
+      maxAllowableDrawdown: template.defaultMaxAllowableDrawdown || 20,
+      expectedReturn: template.defaultExpectedReturn || 5,
+      portfolioId: ''
+    });
   };
 
   const handleComplete = () => {
@@ -247,21 +342,6 @@ export default function ClientOnboardingWizard({ portfolios, universeProducts, o
     onComplete(clientData);
   };
 
-  const handlePresetGoal = (preset) => {
-    setGoalForm(prev => ({
-      ...prev,
-      name: preset.name === 'Custom Goal' ? '' : preset.name,
-      timeHorizon: preset.suggestedHorizon.toString()
-    }));
-  };
-
-  const autoSuggestPortfolio = () => {
-    const timeHorizon = parseInt(goalForm.timeHorizon) || 10;
-    const recommended = getRecommendedPortfolioForGoal(riskScore, timeHorizon, portfolios);
-    if (recommended) {
-      setGoalForm(prev => ({ ...prev, portfolioId: recommended.id }));
-    }
-  };
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
@@ -462,35 +542,81 @@ export default function ClientOnboardingWizard({ portfolios, universeProducts, o
 
               {goals.length > 0 && (
                 <div style={{ marginBottom: '2rem', display: 'grid', gap: '1rem' }}>
-                  {goals.map((goal, idx) => (
-                    <div key={goal.id} style={{ ...s.card, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                          <Target />
-                          <span style={{ fontSize: '1rem', fontWeight: 700 }}>{goal.name}</span>
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', fontSize: '0.875rem', color: '#94a3b8' }}>
-                          <div>
-                            <span style={{ color: '#64748b' }}>Target:</span> ${goal.targetAmount.toLocaleString()}
+                  {goals.map((goal, idx) => {
+                    const healthColors = getHealthStatusColor(goal.healthStatus);
+                    const isAccumulation = goal.goalType === 'accumulation';
+                    return (
+                      <div key={goal.id} style={s.card}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                              {isAccumulation ? <Target /> : <Shield />}
+                              <span style={{ fontSize: '1rem', fontWeight: 700 }}>{goal.goalName}</span>
+                              <span style={{
+                                padding: '0.25rem 0.75rem',
+                                background: isAccumulation ? 'rgba(59,130,246,0.1)' : 'rgba(139,92,246,0.1)',
+                                border: `1px solid ${isAccumulation ? 'rgba(59,130,246,0.3)' : 'rgba(139,92,246,0.3)'}`,
+                                borderRadius: '6px',
+                                fontSize: '0.75rem',
+                                fontWeight: 600,
+                                color: isAccumulation ? '#60a5fa' : '#a78bfa'
+                              }}>
+                                {isAccumulation ? 'Accumulation' : 'Preservation'}
+                              </span>
+                              {goal.healthStatus && (
+                                <span style={{
+                                  padding: '0.25rem 0.75rem',
+                                  background: healthColors.bg,
+                                  border: `1px solid ${healthColors.border}`,
+                                  borderRadius: '6px',
+                                  fontSize: '0.75rem',
+                                  fontWeight: 600,
+                                  color: healthColors.text
+                                }}>
+                                  {goal.healthStatus === 'green' ? 'On Track' : goal.healthStatus === 'yellow' ? 'Monitor' : 'At Risk'}
+                                </span>
+                              )}
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', fontSize: '0.875rem', color: '#94a3b8' }}>
+                              {isAccumulation ? (
+                                <>
+                                  <div>
+                                    <span style={{ color: '#64748b' }}>Target:</span> {formatCurrency(parseFloat(goal.targetAmount))}
+                                  </div>
+                                  <div>
+                                    <span style={{ color: '#64748b' }}>Horizon:</span> {goal.timeHorizonYears} years
+                                  </div>
+                                  <div>
+                                    <span style={{ color: '#64748b' }}>Monthly:</span> {formatCurrency(parseFloat(goal.monthlyContribution || 0))}
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  <div>
+                                    <span style={{ color: '#64748b' }}>Portfolio:</span> {formatCurrency(parseFloat(goal.currentPortfolioValue))}
+                                  </div>
+                                  <div>
+                                    <span style={{ color: '#64748b' }}>Real Return:</span> {goal.realReturn}%
+                                  </div>
+                                  <div>
+                                    <span style={{ color: '#64748b' }}>Max Drawdown:</span> {goal.maxAllowableDrawdown}%
+                                  </div>
+                                </>
+                              )}
+                            </div>
                           </div>
-                          <div>
-                            <span style={{ color: '#64748b' }}>Horizon:</span> {goal.timeHorizon} years
-                          </div>
-                          <div>
-                            <span style={{ color: '#64748b' }}>Portfolio:</span> {goal.portfolioId ? portfolios.find(p => p.id === goal.portfolioId)?.name || 'Not assigned' : 'Not assigned'}
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button onClick={() => handleEditGoal(idx)} style={{ padding: '0.5rem', background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.3)', borderRadius: '8px', color: '#a78bfa', cursor: 'pointer' }}>
+                              Edit
+                            </button>
+                            <button onClick={() => handleDeleteGoal(idx)} style={{ padding: '0.5rem', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '8px', color: '#ef4444', cursor: 'pointer' }}>
+                              <Trash />
+                            </button>
                           </div>
                         </div>
                       </div>
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button onClick={() => handleEditGoal(idx)} style={{ padding: '0.5rem', background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.3)', borderRadius: '8px', color: '#a78bfa', cursor: 'pointer' }}>
-                          Edit
-                        </button>
-                        <button onClick={() => handleDeleteGoal(idx)} style={{ padding: '0.5rem', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '8px', color: '#ef4444', cursor: 'pointer' }}>
-                          <Trash />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
 
@@ -500,77 +626,169 @@ export default function ClientOnboardingWizard({ portfolios, universeProducts, o
                 </h4>
 
                 <div style={{ marginBottom: '1.5rem' }}>
-                  <label style={{ ...s.label, marginBottom: '0.75rem' }}>Quick Presets</label>
+                  <label style={{ ...s.label, marginBottom: '0.75rem' }}>Select Goal Template</label>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
-                    {GOAL_PRESETS.map(preset => (
+                    {goalTemplates.map(template => (
                       <button
-                        key={preset.name}
-                        onClick={() => handlePresetGoal(preset)}
+                        key={template.id}
+                        onClick={() => handleTemplateSelect(template)}
                         style={{
                           padding: '0.75rem',
-                          background: 'rgba(59,130,246,0.1)',
-                          border: '1px solid rgba(59,130,246,0.3)',
+                          background: selectedTemplate?.id === template.id ? 'rgba(59,130,246,0.2)' : 'rgba(59,130,246,0.1)',
+                          border: selectedTemplate?.id === template.id ? '2px solid #3b82f6' : '1px solid rgba(59,130,246,0.3)',
                           borderRadius: '8px',
                           color: '#60a5fa',
                           cursor: 'pointer',
-                          fontSize: '0.875rem',
+                          fontSize: '0.75rem',
                           display: 'flex',
                           flexDirection: 'column',
                           alignItems: 'center',
-                          gap: '0.25rem'
+                          gap: '0.25rem',
+                          transition: 'all 0.2s'
                         }}
                       >
-                        <span style={{ fontSize: '1.5rem' }}>{preset.icon}</span>
-                        <span>{preset.name}</span>
+                        <span style={{ fontSize: '1.5rem' }}>{template.icon}</span>
+                        <span style={{ fontWeight: 600 }}>{template.name}</span>
+                        <span style={{ fontSize: '0.65rem', color: '#94a3b8' }}>{template.goalType}</span>
                       </button>
                     ))}
                   </div>
                 </div>
 
+                {selectedTemplate && (
+                  <div style={{ marginBottom: '1rem', padding: '1rem', background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.2)', borderRadius: '8px' }}>
+                    <div style={{ fontSize: '0.875rem', fontWeight: 600, marginBottom: '0.25rem' }}>{selectedTemplate.name}</div>
+                    <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{selectedTemplate.description}</div>
+                  </div>
+                )}
+
                 <div style={{ display: 'grid', gap: '1rem' }}>
                   <div>
-                    <label style={s.label}>Goal Name</label>
+                    <label style={s.label}>Goal Name *</label>
                     <input
                       type="text"
-                      value={goalForm.name}
-                      onChange={e => setGoalForm(prev => ({ ...prev, name: e.target.value }))}
-                      placeholder="e.g., Retirement, College Fund"
+                      value={goalForm.goalName}
+                      onChange={e => setGoalForm(prev => ({ ...prev, goalName: e.target.value }))}
+                      placeholder="e.g., My Retirement Savings"
                       style={s.input}
                     />
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                    <div>
-                      <label style={s.label}>Target Amount ($)</label>
-                      <input
-                        type="number"
-                        value={goalForm.targetAmount}
-                        onChange={e => setGoalForm(prev => ({ ...prev, targetAmount: e.target.value }))}
-                        placeholder="100000"
-                        style={s.input}
-                      />
-                    </div>
-                    <div>
-                      <label style={s.label}>Time Horizon (years)</label>
-                      <input
-                        type="number"
-                        value={goalForm.timeHorizon}
-                        onChange={e => setGoalForm(prev => ({ ...prev, timeHorizon: e.target.value }))}
-                        placeholder="10"
-                        style={s.input}
-                      />
-                    </div>
+                  {goalForm.goalType === 'accumulation' ? (
+                    <>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                        <div>
+                          <label style={s.label}>Initial Investment ($) *</label>
+                          <input
+                            type="number"
+                            value={goalForm.initialInvestment}
+                            onChange={e => setGoalForm(prev => ({ ...prev, initialInvestment: e.target.value }))}
+                            placeholder="50000"
+                            style={s.input}
+                          />
+                        </div>
+                        <div>
+                          <label style={s.label}>Monthly Contribution ($)</label>
+                          <input
+                            type="number"
+                            value={goalForm.monthlyContribution}
+                            onChange={e => setGoalForm(prev => ({ ...prev, monthlyContribution: e.target.value }))}
+                            placeholder="2000"
+                            style={s.input}
+                          />
+                        </div>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                        <div>
+                          <label style={s.label}>Time Horizon (years) *</label>
+                          <input
+                            type="number"
+                            value={goalForm.timeHorizonYears}
+                            onChange={e => setGoalForm(prev => ({ ...prev, timeHorizonYears: e.target.value }))}
+                            placeholder="20"
+                            style={s.input}
+                          />
+                        </div>
+                        <div>
+                          <label style={s.label}>Target Amount ($) *</label>
+                          <input
+                            type="number"
+                            value={goalForm.targetAmount}
+                            onChange={e => setGoalForm(prev => ({ ...prev, targetAmount: e.target.value }))}
+                            placeholder="1000000"
+                            style={s.input}
+                          />
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                        <div>
+                          <label style={s.label}>Current Portfolio Value ($) *</label>
+                          <input
+                            type="number"
+                            value={goalForm.currentPortfolioValue}
+                            onChange={e => setGoalForm(prev => ({ ...prev, currentPortfolioValue: e.target.value }))}
+                            placeholder="2500000"
+                            style={s.input}
+                          />
+                        </div>
+                        <div>
+                          <label style={s.label}>Inflation Benchmark (%) *</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            value={goalForm.inflationBenchmark}
+                            onChange={e => setGoalForm(prev => ({ ...prev, inflationBenchmark: e.target.value }))}
+                            placeholder="3.0"
+                            style={s.input}
+                          />
+                        </div>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                        <div>
+                          <label style={s.label}>Target Excess Return (%)</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            value={goalForm.targetExcessReturn}
+                            onChange={e => setGoalForm(prev => ({ ...prev, targetExcessReturn: e.target.value }))}
+                            placeholder="2.0"
+                            style={s.input}
+                          />
+                        </div>
+                        <div>
+                          <label style={s.label}>Max Allowable Drawdown (%)</label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            value={goalForm.maxAllowableDrawdown}
+                            onChange={e => setGoalForm(prev => ({ ...prev, maxAllowableDrawdown: e.target.value }))}
+                            placeholder="20.0"
+                            style={s.input}
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  <div>
+                    <label style={s.label}>Expected Return (%)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={goalForm.expectedReturn}
+                      onChange={e => setGoalForm(prev => ({ ...prev, expectedReturn: e.target.value }))}
+                      placeholder="5.0"
+                      style={s.input}
+                    />
                   </div>
 
                   <div style={{ display: 'flex', gap: '1rem' }}>
                     <button
                       onClick={handleAddGoal}
-                      disabled={!goalForm.name || !goalForm.targetAmount || !goalForm.timeHorizon}
-                      style={{
-                        ...s.btn,
-                        opacity: (!goalForm.name || !goalForm.targetAmount || !goalForm.timeHorizon) ? 0.5 : 1,
-                        cursor: (!goalForm.name || !goalForm.targetAmount || !goalForm.timeHorizon) ? 'not-allowed' : 'pointer'
-                      }}
+                      style={s.btn}
                     >
                       <Plus /> {editingGoalIndex !== null ? 'Update Goal' : 'Add Goal'}
                     </button>
@@ -578,7 +796,22 @@ export default function ClientOnboardingWizard({ portfolios, universeProducts, o
                       <button
                         onClick={() => {
                           setEditingGoalIndex(null);
-                          setGoalForm({ name: '', targetAmount: '', timeHorizon: '', portfolioId: '', customPortfolio: false });
+                          setSelectedTemplate(null);
+                          setGoalForm({
+                            goalName: '',
+                            goalType: 'accumulation',
+                            goalTemplateId: '',
+                            initialInvestment: '',
+                            monthlyContribution: '',
+                            timeHorizonYears: '',
+                            targetAmount: '',
+                            currentPortfolioValue: '',
+                            inflationBenchmark: 3,
+                            targetExcessReturn: 2,
+                            maxAllowableDrawdown: 20,
+                            expectedReturn: 5,
+                            portfolioId: ''
+                          });
                         }}
                         style={{ ...s.btn, background: 'rgba(148,163,184,0.2)' }}
                       >
@@ -601,20 +834,40 @@ export default function ClientOnboardingWizard({ portfolios, universeProducts, o
               <div style={{ display: 'grid', gap: '1.5rem' }}>
                 {goals.map((goal, idx) => {
                   const assignedPortfolio = portfolios.find(p => p.id === goal.portfolioId);
-                  const timeHorizon = parseInt(goal.timeHorizon) || 10;
+                  const timeHorizon = goal.goalType === 'accumulation' ? parseInt(goal.timeHorizonYears) || 10 : 10;
                   const suggestedPortfolio = getRecommendedPortfolioForGoal(riskScore, timeHorizon, portfolios);
+                  const isAccumulation = goal.goalType === 'accumulation';
+
+                  const hasDrawdownWarning = !isAccumulation && assignedPortfolio && goal.maxAllowableDrawdown &&
+                    checkDrawdownCompliance(assignedPortfolio.maxDrawdown || 25, goal.maxAllowableDrawdown).riskLevel === 'high';
 
                   return (
                     <div key={goal.id} style={s.card}>
                       <div style={{ display: 'flex', alignItems: 'start', gap: '1rem', marginBottom: '1rem' }}>
-                        <div style={{ padding: '0.75rem', background: 'rgba(59,130,246,0.1)', borderRadius: '8px' }}>
-                          <Target />
+                        <div style={{ padding: '0.75rem', background: isAccumulation ? 'rgba(59,130,246,0.1)' : 'rgba(139,92,246,0.1)', borderRadius: '8px' }}>
+                          {isAccumulation ? <Target /> : <Shield />}
                         </div>
                         <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: '1.125rem', fontWeight: 700, marginBottom: '0.25rem' }}>{goal.name}</div>
+                          <div style={{ fontSize: '1.125rem', fontWeight: 700, marginBottom: '0.25rem' }}>{goal.goalName}</div>
                           <div style={{ fontSize: '0.875rem', color: '#94a3b8' }}>
-                            ${goal.targetAmount.toLocaleString()} • {goal.timeHorizon} year horizon
+                            {isAccumulation
+                              ? `${formatCurrency(parseFloat(goal.targetAmount))} • ${goal.timeHorizonYears} year horizon`
+                              : `${formatCurrency(parseFloat(goal.currentPortfolioValue))} • Max Drawdown: ${goal.maxAllowableDrawdown}%`
+                            }
                           </div>
+                          <span style={{
+                            marginTop: '0.5rem',
+                            display: 'inline-block',
+                            padding: '0.25rem 0.75rem',
+                            background: isAccumulation ? 'rgba(59,130,246,0.1)' : 'rgba(139,92,246,0.1)',
+                            border: `1px solid ${isAccumulation ? 'rgba(59,130,246,0.3)' : 'rgba(139,92,246,0.3)'}`,
+                            borderRadius: '6px',
+                            fontSize: '0.75rem',
+                            fontWeight: 600,
+                            color: isAccumulation ? '#60a5fa' : '#a78bfa'
+                          }}>
+                            {isAccumulation ? 'Accumulation' : 'Preservation'}
+                          </span>
                         </div>
                       </div>
 
@@ -624,7 +877,7 @@ export default function ClientOnboardingWizard({ portfolios, universeProducts, o
                             Recommended: {suggestedPortfolio.name}
                           </div>
                           <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '0.75rem' }}>
-                            Based on {riskLevel.level} risk profile and {timeHorizon} year time horizon
+                            Based on {riskLevel.level} risk profile{isAccumulation && ` and ${timeHorizon} year time horizon`}
                           </div>
                           <button
                             onClick={() => {
@@ -636,6 +889,26 @@ export default function ClientOnboardingWizard({ portfolios, universeProducts, o
                           >
                             Use Recommendation
                           </button>
+                        </div>
+                      )}
+
+                      {hasDrawdownWarning && (
+                        <div style={{
+                          padding: '0.75rem',
+                          background: 'rgba(239,68,68,0.1)',
+                          border: '1px solid rgba(239,68,68,0.3)',
+                          borderRadius: '8px',
+                          marginBottom: '1rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          fontSize: '0.875rem',
+                          color: '#ef4444'
+                        }}>
+                          <AlertTriangle />
+                          <div>
+                            <strong>Compliance Warning:</strong> Portfolio max drawdown ({assignedPortfolio.maxDrawdown}%) exceeds client's allowable limit ({goal.maxAllowableDrawdown}%)
+                          </div>
                         </div>
                       )}
 
@@ -653,7 +926,7 @@ export default function ClientOnboardingWizard({ portfolios, universeProducts, o
                           <option value="">Choose a portfolio...</option>
                           {portfolios.map(p => (
                             <option key={p.id} value={p.id}>
-                              {p.name}
+                              {p.name} - {p.riskLevel}
                             </option>
                           ))}
                         </select>
@@ -667,10 +940,10 @@ export default function ClientOnboardingWizard({ portfolios, universeProducts, o
                               <span style={{ color: '#64748b' }}>Holdings:</span> {assignedPortfolio.holdings.length}
                             </div>
                             <div>
-                              <span style={{ color: '#64748b' }}>Total Weight:</span> {assignedPortfolio.holdings.reduce((sum, h) => sum + h.weight, 0)}%
+                              <span style={{ color: '#64748b' }}>Risk Level:</span> {assignedPortfolio.riskLevel}
                             </div>
                             <div>
-                              <span style={{ color: '#64748b' }}>Type:</span> {assignedPortfolio.type}
+                              <span style={{ color: '#64748b' }}>Max Drawdown:</span> {assignedPortfolio.maxDrawdown || 'N/A'}%
                             </div>
                           </div>
                         </div>
@@ -725,14 +998,49 @@ export default function ClientOnboardingWizard({ portfolios, universeProducts, o
                   <div style={{ display: 'grid', gap: '0.75rem' }}>
                     {goals.map(goal => {
                       const portfolio = portfolios.find(p => p.id === goal.portfolioId);
+                      const isAccumulation = goal.goalType === 'accumulation';
+                      const healthColors = getHealthStatusColor(goal.healthStatus);
                       return (
-                        <div key={goal.id} style={{ padding: '1rem', background: 'rgba(15,23,42,0.4)', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div>
-                            <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>{goal.name}</div>
-                            <div style={{ fontSize: '0.875rem', color: '#94a3b8' }}>
-                              ${goal.targetAmount.toLocaleString()} • {goal.timeHorizon} years • {portfolio?.name || 'No portfolio'}
-                            </div>
+                        <div key={goal.id} style={{ padding: '1rem', background: 'rgba(15,23,42,0.4)', borderRadius: '8px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                            {isAccumulation ? <Target /> : <Shield />}
+                            <div style={{ fontWeight: 600 }}>{goal.goalName}</div>
+                            <span style={{
+                              padding: '0.25rem 0.5rem',
+                              background: isAccumulation ? 'rgba(59,130,246,0.1)' : 'rgba(139,92,246,0.1)',
+                              border: `1px solid ${isAccumulation ? 'rgba(59,130,246,0.3)' : 'rgba(139,92,246,0.3)'}`,
+                              borderRadius: '4px',
+                              fontSize: '0.65rem',
+                              fontWeight: 600,
+                              color: isAccumulation ? '#60a5fa' : '#a78bfa'
+                            }}>
+                              {isAccumulation ? 'Accumulation' : 'Preservation'}
+                            </span>
+                            {goal.healthStatus && (
+                              <span style={{
+                                padding: '0.25rem 0.5rem',
+                                background: healthColors.bg,
+                                border: `1px solid ${healthColors.border}`,
+                                borderRadius: '4px',
+                                fontSize: '0.65rem',
+                                fontWeight: 600,
+                                color: healthColors.text
+                              }}>
+                                {goal.healthStatus.toUpperCase()}
+                              </span>
+                            )}
                           </div>
+                          <div style={{ fontSize: '0.875rem', color: '#94a3b8' }}>
+                            {isAccumulation
+                              ? `${formatCurrency(parseFloat(goal.targetAmount))} target • ${goal.timeHorizonYears} years • ${portfolio?.name || 'No portfolio'}`
+                              : `${formatCurrency(parseFloat(goal.currentPortfolioValue))} portfolio • ${goal.maxAllowableDrawdown}% max drawdown • ${portfolio?.name || 'No portfolio'}`
+                            }
+                          </div>
+                          {goal.feasibilityScore && (
+                            <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#cbd5e1' }}>
+                              Feasibility Score: {goal.feasibilityScore}%
+                            </div>
+                          )}
                         </div>
                       );
                     })}

@@ -43,8 +43,8 @@ const PieChart = ({ data, size = 200 }) => {
   );
 };
 
-export function ClientPortfolioModule({ products, portfolios }) {
-  const [clients, setClients] = useState([
+export function ClientPortfolioModule({ products, portfolios, clients: externalClients }) {
+  const [clients, setClients] = useState(externalClients || [
     {
       id: 'C1',
       name: 'Robert Johnson',
@@ -52,10 +52,7 @@ export function ClientPortfolioModule({ products, portfolios }) {
       riskLevel: 'Moderate',
       riskScore: 12,
       onboardedDate: '2026-01-15',
-      goals: [
-        { id: 'G1', name: 'Retirement', targetAmount: 1000000, timeHorizon: '20 years', portfolioId: 'P2' },
-        { id: 'G2', name: 'Education Fund', targetAmount: 200000, timeHorizon: '10 years', portfolioId: 'P1' }
-      ]
+      goals: []
     },
     {
       id: 'C2',
@@ -64,9 +61,7 @@ export function ClientPortfolioModule({ products, portfolios }) {
       riskLevel: 'Aggressive',
       riskScore: 17,
       onboardedDate: '2026-01-22',
-      goals: [
-        { id: 'G3', name: 'Wealth Building', targetAmount: 500000, timeHorizon: '15 years', portfolioId: 'P3' }
-      ]
+      goals: []
     }
   ]);
 
@@ -93,7 +88,9 @@ export function ClientPortfolioModule({ products, portfolios }) {
       const portfolio = portfolios.find(p => p.id === goal.portfolioId);
       if (!portfolio) return;
 
-      const goalValue = goal.targetAmount || 0;
+      const goalValue = goal.goalType === 'accumulation'
+        ? (parseFloat(goal.targetAmount) || 0)
+        : (parseFloat(goal.currentPortfolioValue) || 0);
       totalValue += goalValue;
 
       portfolio.holdings.forEach(holding => {

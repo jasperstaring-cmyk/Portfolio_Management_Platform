@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Target, TrendingUp, Shield, AlertTriangle, CheckCircle, XCircle, Plus, Edit, Trash, ToggleLeft, ToggleRight } from 'lucide-react';
+import { getActiveGoalTemplates } from './utils/GoalTemplates';
 import {
   calculateAccumulationFeasibility,
   calculatePreservationMetrics,
