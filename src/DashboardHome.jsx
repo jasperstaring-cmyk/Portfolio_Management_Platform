@@ -86,8 +86,8 @@ const DashboardHome = ({ onNavigate = () => {} }) => {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', gap: '2rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
             <button style={{
               padding: '0.75rem 1.5rem',
               background: 'rgba(255,255,255,0.2)',
@@ -113,7 +113,49 @@ const DashboardHome = ({ onNavigate = () => {} }) => {
               fontFamily: 'inherit',
               transition: 'all 0.2s'
             }}>
-              Research
+              Screener
+            </button>
+            <button onClick={() => onNavigate('universe')} style={{
+              padding: '0.75rem 1.5rem',
+              background: 'transparent',
+              border: 'none',
+              borderRadius: '8px',
+              color: '#bfdbfe',
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+              fontFamily: 'inherit',
+              transition: 'all 0.2s'
+            }}>
+              Universe
+            </button>
+            <button onClick={() => onNavigate('portfolios')} style={{
+              padding: '0.75rem 1.5rem',
+              background: 'transparent',
+              border: 'none',
+              borderRadius: '8px',
+              color: '#bfdbfe',
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+              fontFamily: 'inherit',
+              transition: 'all 0.2s'
+            }}>
+              Portfolios
+            </button>
+            <button onClick={() => onNavigate('riskProfiles')} style={{
+              padding: '0.75rem 1.5rem',
+              background: 'transparent',
+              border: 'none',
+              borderRadius: '8px',
+              color: '#bfdbfe',
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+              fontFamily: 'inherit',
+              transition: 'all 0.2s'
+            }}>
+              Risk
             </button>
             <button onClick={() => onNavigate('clients')} style={{
               padding: '0.75rem 1.5rem',
@@ -128,6 +170,34 @@ const DashboardHome = ({ onNavigate = () => {} }) => {
               transition: 'all 0.2s'
             }}>
               Clients
+            </button>
+            <button onClick={() => onNavigate('goals')} style={{
+              padding: '0.75rem 1.5rem',
+              background: 'transparent',
+              border: 'none',
+              borderRadius: '8px',
+              color: '#bfdbfe',
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+              fontFamily: 'inherit',
+              transition: 'all 0.2s'
+            }}>
+              Goals
+            </button>
+            <button onClick={() => onNavigate('users')} style={{
+              padding: '0.75rem 1.5rem',
+              background: 'transparent',
+              border: 'none',
+              borderRadius: '8px',
+              color: '#bfdbfe',
+              fontWeight: 600,
+              cursor: 'pointer',
+              fontSize: '0.875rem',
+              fontFamily: 'inherit',
+              transition: 'all 0.2s'
+            }}>
+              Users
             </button>
           </div>
 
