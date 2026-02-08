@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { ClientPortfolioModule } from './ClientPortfolioModule';
+import { ScreenerModule } from './ScreenerModule';
+import { UniverseModule } from './UniverseModule';
+import { EXTENDED_MOCK_PRODUCTS } from './mockProducts';
 
-// Mock Data
 const MOCK_PRODUCTS = [
-  { id: 'MF001', name: 'Vanguard Total Stock Market Index Fund', ticker: 'VTSAX', type: 'Mutual Fund', assetClass: 'Equity', category: 'Large Blend', region: 'US', riskRating: 4, expenseRatio: 0.04, aum: 1250000000000, morningstarRating: 5, ytdReturn: 12.5 },
-  { id: 'ETF001', name: 'iShares Core U.S. Aggregate Bond ETF', ticker: 'AGG', type: 'ETF', assetClass: 'Fixed Income', category: 'Intermediate Core Bond', region: 'US', riskRating: 2, expenseRatio: 0.03, aum: 94000000000, morningstarRating: 4, ytdReturn: -1.2 },
-  { id: 'MF002', name: 'Fidelity International Growth Fund', ticker: 'FIGFX', type: 'Mutual Fund', assetClass: 'Equity', category: 'Foreign Large Growth', region: 'International', riskRating: 5, expenseRatio: 0.89, aum: 12500000000, morningstarRating: 4, ytdReturn: 18.3 },
-  { id: 'ETF002', name: 'Invesco QQQ Trust', ticker: 'QQQ', type: 'ETF', assetClass: 'Equity', category: 'Large Growth', region: 'US', riskRating: 5, expenseRatio: 0.20, aum: 245000000000, morningstarRating: 5, ytdReturn: 25.7 },
-  { id: 'MF003', name: 'PIMCO Income Fund', ticker: 'PONDX', type: 'Mutual Fund', assetClass: 'Fixed Income', category: 'Multisector Bond', region: 'Global', riskRating: 3, expenseRatio: 0.75, aum: 98000000000, morningstarRating: 5, ytdReturn: 5.8 }
+  { id: 'MF001', ticker: 'VTSAX', name: 'Vanguard Total Stock Market Index Fund', type: 'Mutual Fund', assetClass: 'Equity', category: 'Large Blend', region: 'US', riskRating: 4, expenseRatio: 0.04, aum: 1250000000000, morningstarRating: 5, ytdReturn: 12.5 },
+  { id: 'ETF001', ticker: 'AGG', name: 'iShares Core U.S. Aggregate Bond ETF', type: 'ETF', assetClass: 'Fixed Income', category: 'Intermediate Core Bond', region: 'US', riskRating: 2, expenseRatio: 0.03, aum: 94000000000, morningstarRating: 4, ytdReturn: -1.2 },
+  { id: 'MF002', ticker: 'FIGFX', name: 'Fidelity International Growth Fund', type: 'Mutual Fund', assetClass: 'Equity', category: 'Foreign Large Growth', region: 'International', riskRating: 5, expenseRatio: 0.89, aum: 12500000000, morningstarRating: 4, ytdReturn: 18.3 },
+  { id: 'ETF002', ticker: 'QQQ', name: 'Invesco QQQ Trust', type: 'ETF', assetClass: 'Equity', category: 'Large Growth', region: 'US', riskRating: 5, expenseRatio: 0.20, aum: 245000000000, morningstarRating: 5, ytdReturn: 25.7 },
+  { id: 'MF003', ticker: 'PONDX', name: 'PIMCO Income Fund', type: 'Mutual Fund', assetClass: 'Fixed Income', category: 'Multisector Bond', region: 'Global', riskRating: 3, expenseRatio: 0.75, aum: 98000000000, morningstarRating: 5, ytdReturn: 5.8 }
 ];
 
 // Icons
@@ -36,7 +38,9 @@ const PieChart = ({ data }) => {
 };
 
 function App() {
-  const [activeTab, setActiveTab] = useState('products');
+  const [activeTab, setActiveTab] = useState('screener');
+  const [allProducts] = useState(EXTENDED_MOCK_PRODUCTS);
+  const [universeProducts, setUniverseProducts] = useState(MOCK_PRODUCTS);
   const [products] = useState(MOCK_PRODUCTS);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterAsset, setFilterAsset] = useState('all');
@@ -190,32 +194,37 @@ function App() {
         <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700, background: 'linear-gradient(135deg,#3b82f6,#8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>FinFiles Portfolio Builder</h1>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
-            {['products', 'portfolios', 'risk', 'clients', 'advisors'].map(tab => (
-              <button key={tab} onClick={() => setActiveTab(tab)} style={{ padding: '0.625rem 1.25rem', background: activeTab === tab ? 'rgba(59,130,246,0.2)' : 'transparent', border: activeTab === tab ? '1px solid rgba(59,130,246,0.4)' : '1px solid transparent', borderRadius: '8px', color: activeTab === tab ? '#60a5fa' : '#94a3b8', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem', transition: 'all 0.2s' }}>{tab === 'products' ? '🔍 Product Universe' : tab === 'portfolios' ? '📊 Model Portfolios' : tab === 'risk' ? '⚖️ Risk Profiles' : tab === 'clients' ? '👨‍💼 Clients' : '👥 Advisors'}</button>
+            {['screener', 'universe', 'portfolios', 'risk', 'clients', 'advisors'].map(tab => (
+              <button key={tab} onClick={() => setActiveTab(tab)} style={{ padding: '0.625rem 1.25rem', background: activeTab === tab ? 'rgba(59,130,246,0.2)' : 'transparent', border: activeTab === tab ? '1px solid rgba(59,130,246,0.4)' : '1px solid transparent', borderRadius: '8px', color: activeTab === tab ? '#60a5fa' : '#94a3b8', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem', transition: 'all 0.2s' }}>{tab === 'screener' ? '🔎 Screener' : tab === 'universe' ? '🌐 Universe' : tab === 'portfolios' ? '📊 Model Portfolios' : tab === 'risk' ? '⚖️ Risk Profiles' : tab === 'clients' ? '👨‍💼 Clients' : '👥 Advisors'}</button>
             ))}
           </div>
         </div>
       </nav>
 
       <main style={{ maxWidth: '1400px', margin: '0 auto', padding: '2rem' }}>
-        {activeTab === 'products' && (
+        {activeTab === 'screener' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-              <div><h2 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 700 }}>Product Universe</h2><p style={{ margin: '0.5rem 0 0', color: '#94a3b8', fontSize: '0.875rem' }}>Browse and analyze investment products</p></div>
+            <div style={{ marginBottom: '2rem' }}>
+              <h2 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 700 }}>Product Screener</h2>
+              <p style={{ margin: '0.5rem 0 0', color: '#94a3b8', fontSize: '0.875rem' }}>Search and filter investment products to add to your universe</p>
             </div>
-            <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
-              <div style={{ position: 'relative', flex: 1 }}><Search size={18} /><span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }}></span><input type="text" placeholder="Search by name or ticker..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={{ ...s.input, paddingLeft: '2.5rem' }} /></div>
-              <select value={filterAsset} onChange={e => setFilterAsset(e.target.value)} style={{ ...s.input, width: 'auto', minWidth: '200px', cursor: 'pointer' }}><option value="all">All Asset Classes</option><option value="Equity">Equity</option><option value="Fixed Income">Fixed Income</option></select>
+            <ScreenerModule allProducts={allProducts} universeProducts={universeProducts} onAddToUniverse={(products) => {
+              setUniverseProducts([...universeProducts, ...products]);
+              alert(`Added ${products.length} product${products.length !== 1 ? 's' : ''} to your universe!`);
+            }} />
+          </div>
+        )}
+
+        {activeTab === 'universe' && (
+          <div>
+            <div style={{ marginBottom: '2rem' }}>
+              <h2 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 700 }}>Product Universe</h2>
+              <p style={{ margin: '0.5rem 0 0', color: '#94a3b8', fontSize: '0.875rem' }}>Manage and organize your investment product universe</p>
             </div>
-            <div style={{ display: 'grid', gap: '1rem' }}>{filteredProducts.map(p => (
-              <div key={p.id} onClick={() => setSelectedProduct(selectedProduct?.id === p.id ? null : p)} style={{ ...s.card, cursor: 'pointer', transition: 'all 0.2s', border: selectedProduct?.id === p.id ? '1px solid rgba(59,130,246,0.4)' : '1px solid rgba(148,163,184,0.1)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                  <div style={{ flex: 1 }}><div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}><h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 600 }}>{p.name}</h3><span style={{ padding: '0.25rem 0.625rem', background: p.type === 'ETF' ? 'rgba(59,130,246,0.1)' : 'rgba(139,92,246,0.1)', border: `1px solid ${p.type === 'ETF' ? 'rgba(59,130,246,0.3)' : 'rgba(139,92,246,0.3)'}`, borderRadius: '6px', fontSize: '0.75rem', fontWeight: 500, color: p.type === 'ETF' ? '#60a5fa' : '#a78bfa' }}>{p.type}</span></div><div style={{ display: 'flex', gap: '2rem', marginTop: '1rem', fontSize: '0.875rem' }}><div><span style={{ color: '#64748b' }}>Ticker:</span> <span style={{ fontWeight: 600 }}>{p.ticker}</span></div><div><span style={{ color: '#64748b' }}>Asset Class:</span> <span style={{ fontWeight: 600 }}>{p.assetClass}</span></div><div><span style={{ color: '#64748b' }}>Risk:</span> <span style={{ fontWeight: 600 }}>{p.riskRating}/5</span></div><div><span style={{ color: '#64748b' }}>Expense Ratio:</span> <span style={{ fontWeight: 600 }}>{p.expenseRatio}%</span></div><div><span style={{ color: '#64748b' }}>YTD Return:</span> <span style={{ fontWeight: 600, color: p.ytdReturn > 0 ? '#10b981' : '#ef4444' }}>{p.ytdReturn > 0 ? '+' : ''}{p.ytdReturn}%</span></div></div></div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>{[...Array(5)].map((_, i) => <span key={i} style={{ color: i < p.morningstarRating ? '#f59e0b' : '#334155', fontSize: '1.25rem' }}>★</span>)}</div>
-                </div>
-                {selectedProduct?.id === p.id && <div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(148,163,184,0.1)', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '1.5rem' }}><div><div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '0.25rem' }}>AUM</div><div style={{ fontSize: '1.25rem', fontWeight: 700 }}>${(p.aum / 1e9).toFixed(1)}B</div></div><div><div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '0.25rem' }}>Category</div><div style={{ fontSize: '1rem', fontWeight: 600 }}>{p.category}</div></div><div><div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '0.25rem' }}>Region</div><div style={{ fontSize: '1rem', fontWeight: 600 }}>{p.region}</div></div></div>}
-              </div>
-            ))}</div>
+            <UniverseModule universeProducts={universeProducts} portfolios={portfolios} onRemoveProduct={(productId) => {
+              setUniverseProducts(universeProducts.filter(p => p.id !== productId));
+              localStorage.removeItem(`product_labels_${productId}`);
+            }} />
           </div>
         )}
 
