@@ -116,17 +116,18 @@ export class ReportGenerator {
     this.currentY += 5;
   }
 
-  addPieChart(data, centerX, centerY, radius) {
+  addAllocationBars(data, startX, startY, maxWidth) {
     if (!data || data.length === 0) return;
 
     const total = data.reduce((sum, item) => sum + item.value, 0);
     if (total === 0) return;
 
-    let currentAngle = -90;
+    this.doc.setFontSize(10);
+    let currentY = startY;
 
-    data.forEach((item, index) => {
+    data.forEach((item) => {
       const percentage = item.value / total;
-      const angle = percentage * 360;
+      const barWidth = maxWidth * percentage;
 
       const colorMap = {
         'Equity': COLORS.danger,
@@ -137,55 +138,24 @@ export class ReportGenerator {
       };
 
       const color = colorMap[item.label] || [150, 150, 150];
+
       this.doc.setFillColor(...color);
+      this.doc.rect(startX, currentY, barWidth, 8, 'F');
 
-      this.drawPieSlice(centerX, centerY, radius, currentAngle, currentAngle + angle);
-      currentAngle += angle;
-    });
-
-    let legendY = centerY + radius + 10;
-    this.doc.setFontSize(9);
-
-    data.forEach((item, index) => {
-      const colorMap = {
-        'Equity': COLORS.danger,
-        'Fixed Income': COLORS.primary,
-        'Alternatives': COLORS.warning,
-        'Cash': COLORS.success,
-        'Real Estate': COLORS.secondary
-      };
-
-      const color = colorMap[item.label] || [150, 150, 150];
-      this.doc.setFillColor(...color);
-      this.doc.rect(centerX - radius, legendY, 4, 4, 'F');
+      this.doc.setDrawColor(200, 200, 200);
+      this.doc.rect(startX, currentY, maxWidth, 8);
 
       this.doc.setTextColor(0, 0, 0);
-      this.doc.text(`${item.label}: ${item.value.toFixed(1)}%`, centerX - radius + 6, legendY + 3);
+      this.doc.setFont('helvetica', 'bold');
+      this.doc.text(item.label, startX + maxWidth + 5, currentY + 6);
 
-      legendY += 6;
+      this.doc.setFont('helvetica', 'normal');
+      this.doc.text(`${item.value.toFixed(1)}%`, startX + maxWidth + 60, currentY + 6);
+
+      currentY += 12;
     });
-  }
 
-  drawPieSlice(centerX, centerY, radius, startAngle, endAngle) {
-    const startRad = (startAngle * Math.PI) / 180;
-    const endRad = (endAngle * Math.PI) / 180;
-
-    const x1 = centerX + radius * Math.cos(startRad);
-    const y1 = centerY + radius * Math.sin(startRad);
-    const x2 = centerX + radius * Math.cos(endRad);
-    const y2 = centerY + radius * Math.sin(endRad);
-
-    this.doc.lines(
-      [
-        [x1 - centerX, y1 - centerY],
-        [x2 - x1, y2 - y1],
-        [centerX - x2, centerY - y2]
-      ],
-      centerX,
-      centerY,
-      [1, 1],
-      'F'
-    );
+    this.currentY = currentY + 5;
   }
 
   addKeyMetric(label, value, x, y, width, height, color) {
@@ -243,8 +213,7 @@ export class ReportGenerator {
     if (assetAllocation.length > 0) {
       this.addSection('Asset Allocation');
       this.currentY += 5;
-      this.addPieChart(assetAllocation, this.pageWidth / 2, this.currentY + 30, 30);
-      this.currentY += 80;
+      this.addAllocationBars(assetAllocation, this.margin + 10, this.currentY, 100);
     }
 
     this.addSection('Holdings Detail');
@@ -349,8 +318,7 @@ export class ReportGenerator {
 
     if (consolidatedAllocation.length > 0) {
       this.currentY += 5;
-      this.addPieChart(consolidatedAllocation, this.pageWidth / 2, this.currentY + 30, 30);
-      this.currentY += 80;
+      this.addAllocationBars(consolidatedAllocation, this.margin + 10, this.currentY, 100);
     }
 
     this.addSection('Projected Growth');
