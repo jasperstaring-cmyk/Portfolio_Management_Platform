@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import ProductDetailView from './ProductDetailView';
 
 const Icon = ({ d, size = 18 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d={d}/></svg>;
 const Search = ({ size = 20 }) => <Icon d="M11 19 A8 8 0 1 1 19 11 A8 8 0 0 1 11 19 M21 21 L16.65 16.65" size={size} />;
@@ -6,6 +7,7 @@ const Check = () => <Icon d="M20 6 L9 17 L4 12" />;
 const ChevronDown = () => <Icon d="M6 9 L12 15 L18 9" />;
 const Plus = () => <Icon d="M12 5 L12 19 M5 12 L19 12" />;
 const Star = ({ filled = false }) => <Icon d="M12 2 L15.09 10.26 L24 10.26 L17.55 15.57 L19.64 23.83 L12 18.52 L4.36 23.83 L6.45 15.57 L0 10.26 L8.91 10.26 Z" size={16} />;
+const Eye = () => <Icon d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z" />;
 
 const StarRating = ({ rating }) => (
   <div style={{ display: 'flex', gap: '2px' }}>
@@ -18,6 +20,7 @@ const StarRating = ({ rating }) => (
 export function ScreenerModule({ allProducts, universeProducts, onAddToUniverse }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProducts, setSelectedProducts] = useState({});
+  const [selectedProductDetail, setSelectedProductDetail] = useState(null);
   const [filters, setFilters] = useState({
     assetClass: [],
     type: [],
@@ -227,11 +230,44 @@ export function ScreenerModule({ allProducts, universeProducts, onAddToUniverse 
                     <span style={{ color: '#f1f5f9', fontWeight: 600 }}>{product.type}</span>
                   </div>
                 </div>
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedProductDetail(product);
+                  }}
+                  style={{
+                    marginTop: '0.75rem',
+                    width: '100%',
+                    padding: '0.625rem',
+                    background: 'rgba(59,130,246,0.1)',
+                    border: '1px solid rgba(59,130,246,0.3)',
+                    borderRadius: '6px',
+                    color: '#60a5fa',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem'
+                  }}
+                >
+                  <Eye />
+                  View Details
+                </button>
               </div>
             ))
           )}
         </div>
       </div>
+
+      {selectedProductDetail && (
+        <ProductDetailView
+          product={selectedProductDetail}
+          onClose={() => setSelectedProductDetail(null)}
+        />
+      )}
     </div>
   );
 }
