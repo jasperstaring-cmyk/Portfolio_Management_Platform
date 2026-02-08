@@ -21,8 +21,8 @@ const PlusCircle = () => <Icon d="M12 2 A10 10 0 1 1 2 12 A10 10 0 0 1 12 2 M12 
 const Search = ({ size = 20 }) => <Icon d="M11 19 A8 8 0 1 1 19 11 A8 8 0 0 1 11 19 M21 21 L16.65 16.65" size={size} />;
 const Check = () => <Icon d="M20 6 L9 17 L4 12" />;
 const X = () => <Icon d="M18 6 L6 18 M6 6 L18 18" />;
-const Trash = () => <Icon d="M3 6 L21 6 M19 6 L19 20 A2 2 0 0 1 17 22 L7 22 A2 2 0 0 1 5 20 L5 6 M8 6 L8 4 A2 2 0 0 1 10 2 L14 2 A2 2 0 0 1 16 4 L16 6" />;
-const Edit = () => <Icon d="M11 4 L4 4 A2 2 0 0 0 2 6 L2 20 A2 2 0 0 0 4 22 L18 22 A2 2 0 0 0 20 20 L20 13 M18.5 2.5 A2.121 2.121 0 0 1 21.5 5.5 L12 15 L8 16 L9 12 Z" />;
+const Trash = ({ size = 18 }) => <Icon d="M3 6 L21 6 M19 6 L19 20 A2 2 0 0 1 17 22 L7 22 A2 2 0 0 1 5 20 L5 6 M8 6 L8 4 A2 2 0 0 1 10 2 L14 2 A2 2 0 0 1 16 4 L16 6" size={size} />;
+const Edit = ({ size = 18 }) => <Icon d="M11 4 L4 4 A2 2 0 0 0 2 6 L2 20 A2 2 0 0 0 4 22 L18 22 A2 2 0 0 0 20 20 L20 13 M18.5 2.5 A2.121 2.121 0 0 1 21.5 5.5 L12 15 L8 16 L9 12 Z" size={size} />;
 const Play = () => <Icon d="M5 3 L19 12 L5 21 Z" />;
 const Users = () => <Icon d="M17 21 L17 19 A4 4 0 0 0 13 15 L11 15 A4 4 0 0 0 7 19 L7 21 M12 11 A4 4 0 1 0 12 3 A4 4 0 0 0 12 11 M23 21 L23 19 A4 4 0 0 0 19.03 15.05 M16 3.13 A4 4 0 0 1 16 11" />;
 const UserPlus = () => <Icon d="M16 21 L16 19 A4 4 0 0 0 12 15 L8 15 A4 4 0 0 0 4 19 L4 21 M12 11 A4 4 0 1 0 12 3 A4 4 0 0 0 12 11 M20 8 L20 14 M23 11 L17 11" />;
@@ -89,6 +89,16 @@ function App() {
   const [showCreateAdvisor, setShowCreateAdvisor] = useState(false);
   const [newAdvisor, setNewAdvisor] = useState({ name: '', email: '', permissions: 'Full Access', assignedPortfolios: [], assignedRiskProfiles: [] });
   const [editingAdvisor, setEditingAdvisor] = useState(null);
+
+  // Risk Level Management State
+  const [riskLevels, setRiskLevels] = useState([
+    { id: 'RL1', name: 'Conservative', color: '#10b981', description: 'Low-risk capital preservation strategy' },
+    { id: 'RL2', name: 'Moderate', color: '#f59e0b', description: 'Balanced growth and stability' },
+    { id: 'RL3', name: 'Aggressive', color: '#ef4444', description: 'High-growth equity focused' }
+  ]);
+  const [showManageRiskLevels, setShowManageRiskLevels] = useState(false);
+  const [editingRiskLevel, setEditingRiskLevel] = useState(null);
+  const [newRiskLevel, setNewRiskLevel] = useState({ name: '', color: '#3b82f6', description: '' });
 
   const filteredProducts = products.filter(p => {
     const search = p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.ticker.toLowerCase().includes(searchTerm.toLowerCase());
@@ -210,6 +220,31 @@ function App() {
     });
   };
 
+  // Risk Level Management Functions
+  const saveRiskLevel = () => {
+    if (!newRiskLevel.name.trim()) return alert('Risk level name is required');
+    if (editingRiskLevel) {
+      setRiskLevels(riskLevels.map(rl => rl.id === editingRiskLevel.id ? { ...editingRiskLevel, ...newRiskLevel } : rl));
+      setEditingRiskLevel(null);
+    } else {
+      setRiskLevels([...riskLevels, { ...newRiskLevel, id: `RL${riskLevels.length + 1}` }]);
+    }
+    setNewRiskLevel({ name: '', color: '#3b82f6', description: '' });
+  };
+
+  const deleteRiskLevel = (id) => {
+    const inUse = portfolios.some(p => p.riskLevel === riskLevels.find(rl => rl.id === id)?.name);
+    if (inUse) return alert('Cannot delete: This risk level is assigned to one or more portfolios');
+    if (confirm('Delete this risk level?')) setRiskLevels(riskLevels.filter(rl => rl.id !== id));
+  };
+
+  const editRiskLevel = (riskLevel) => {
+    setEditingRiskLevel(riskLevel);
+    setNewRiskLevel({ name: riskLevel.name, color: riskLevel.color, description: riskLevel.description });
+  };
+
+  const getRiskLevelByName = (name) => riskLevels.find(rl => rl.name === name) || { color: '#94a3b8' };
+
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#0f172a 0%,#1e293b 100%)', color: '#f1f5f9', fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif' }}>
       <nav style={{ background: 'rgba(15,23,42,0.95)', borderBottom: '1px solid rgba(148,163,184,0.1)', padding: '1rem 2rem', position: 'sticky', top: 0, zIndex: 100, backdropFilter: 'blur(10px)' }}>
@@ -267,11 +302,80 @@ function App() {
               {!showCreatePortfolio && <button onClick={() => setShowCreatePortfolio(true)} style={s.btn}><PlusCircle />Create Portfolio</button>}
             </div>
 
+            <div style={{ ...s.card, marginBottom: '2rem', background: 'linear-gradient(135deg, rgba(139,92,246,0.05), rgba(59,130,246,0.05))' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 700 }}>Risk Level Manager</h3>
+                  <p style={{ margin: '0.5rem 0 0', color: '#94a3b8', fontSize: '0.875rem' }}>Define risk levels for portfolio categorization</p>
+                </div>
+                <button onClick={() => setShowManageRiskLevels(!showManageRiskLevels)} style={{ padding: '0.625rem 1rem', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)', borderRadius: '8px', color: '#60a5fa', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500 }}>
+                  {showManageRiskLevels ? 'Hide' : 'Manage Risk Levels'}
+                </button>
+              </div>
+
+              {showManageRiskLevels && (
+                <div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+                    {riskLevels.map(rl => (
+                      <div key={rl.id} style={{ padding: '1rem', background: 'rgba(15,23,42,0.4)', border: `2px solid ${rl.color}33`, borderRadius: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.75rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: rl.color }}></div>
+                            <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>{rl.name}</h4>
+                          </div>
+                          <div style={{ display: 'flex', gap: '0.25rem' }}>
+                            <button onClick={() => { editRiskLevel(rl); }} style={{ padding: '0.375rem', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)', borderRadius: '6px', color: '#60a5fa', cursor: 'pointer', fontSize: '0.75rem' }}><Edit size={14} /></button>
+                            <button onClick={() => deleteRiskLevel(rl.id)} style={{ padding: '0.375rem', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '6px', color: '#ef4444', cursor: 'pointer', fontSize: '0.75rem' }}><Trash size={14} /></button>
+                          </div>
+                        </div>
+                        <p style={{ margin: 0, color: '#94a3b8', fontSize: '0.8rem' }}>{rl.description || 'No description'}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{ padding: '1.5rem', background: 'rgba(15,23,42,0.4)', border: '1px solid rgba(148,163,184,0.2)', borderRadius: '8px' }}>
+                    <h4 style={{ margin: '0 0 1rem', fontSize: '0.875rem', fontWeight: 600, color: '#94a3b8' }}>
+                      {editingRiskLevel ? 'EDIT RISK LEVEL' : 'ADD NEW RISK LEVEL'}
+                    </h4>
+                    <div style={{ display: 'grid', gap: '1rem' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px', gap: '1rem' }}>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 500, marginBottom: '0.5rem', color: '#94a3b8' }}>Risk Level Name</label>
+                          <input type="text" value={newRiskLevel.name} onChange={e => setNewRiskLevel({ ...newRiskLevel, name: e.target.value })} placeholder="e.g., Moderately Conservative" style={s.input} />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 500, marginBottom: '0.5rem', color: '#94a3b8' }}>Color</label>
+                          <input type="color" value={newRiskLevel.color} onChange={e => setNewRiskLevel({ ...newRiskLevel, color: e.target.value })} style={{ ...s.input, height: '42px', cursor: 'pointer' }} />
+                        </div>
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 500, marginBottom: '0.5rem', color: '#94a3b8' }}>Description</label>
+                        <input type="text" value={newRiskLevel.description} onChange={e => setNewRiskLevel({ ...newRiskLevel, description: e.target.value })} placeholder="Brief description of this risk level" style={s.input} />
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.75rem' }}>
+                        <button onClick={saveRiskLevel} style={{ ...s.btn, flex: 1 }}>
+                          {editingRiskLevel ? 'Update Risk Level' : 'Add Risk Level'}
+                        </button>
+                        {editingRiskLevel && (
+                          <button onClick={() => { setEditingRiskLevel(null); setNewRiskLevel({ name: '', color: '#3b82f6', description: '' }); }} style={{ padding: '0.875rem 1.5rem', background: 'rgba(148,163,184,0.1)', border: '1px solid rgba(148,163,184,0.2)', borderRadius: '8px', color: '#94a3b8', fontWeight: 600, cursor: 'pointer' }}>
+                            Cancel
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {!showCreatePortfolio ? (
-              <div style={{ display: 'grid', gap: '1.5rem' }}>{portfolios.map(p => (
+              <div style={{ display: 'grid', gap: '1.5rem' }}>{portfolios.map(p => {
+                const riskLevelInfo = getRiskLevelByName(p.riskLevel);
+                const riskColor = riskLevelInfo.color;
+                return (
                 <div key={p.id} style={s.card}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1.5rem' }}>
-                    <div style={{ flex: 1 }}><div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}><h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>{p.name}</h3><span style={{ padding: '0.25rem 0.75rem', background: p.riskLevel === 'Conservative' ? 'rgba(16,185,129,0.1)' : p.riskLevel === 'Moderate' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)', border: `1px solid ${p.riskLevel === 'Conservative' ? 'rgba(16,185,129,0.3)' : p.riskLevel === 'Moderate' ? 'rgba(245,158,11,0.3)' : 'rgba(239,68,68,0.3)'}`, borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, color: p.riskLevel === 'Conservative' ? '#10b981' : p.riskLevel === 'Moderate' ? '#f59e0b' : '#ef4444' }}>{p.riskLevel}</span></div><p style={{ margin: 0, color: '#94a3b8', fontSize: '0.875rem' }}>{p.description}</p></div>
+                    <div style={{ flex: 1 }}><div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}><h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>{p.name}</h3><span style={{ padding: '0.25rem 0.75rem', background: `${riskColor}1A`, border: `1px solid ${riskColor}4D`, borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, color: riskColor }}>{p.riskLevel}</span></div><p style={{ margin: 0, color: '#94a3b8', fontSize: '0.875rem' }}>{p.description}</p></div>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                       <button onClick={() => generatePortfolioReport(p)} style={{ padding: '0.5rem 1rem', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)', borderRadius: '8px', color: '#60a5fa', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}><FileText /> Generate Report</button>
                       <button onClick={() => deletePortfolio(p.id)} style={{ padding: '0.5rem', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '8px', color: '#ef4444', cursor: 'pointer' }}><Trash /></button>
@@ -282,11 +386,13 @@ function App() {
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}><h4 style={{ margin: '0 0 1rem', fontSize: '0.875rem', fontWeight: 600, color: '#94a3b8' }}>ALLOCATION</h4><PieChart data={getPortfolioData(p)} /></div>
                   </div>
                 </div>
-              ))}</div>
+              );
+              })}</div>
             ) : (
               <PortfolioBuilder
                 portfolios={portfolios}
                 universeProducts={universeProducts}
+                riskLevels={riskLevels}
                 onSave={(portfolio) => {
                   setPortfolios([...portfolios, portfolio]);
                   setShowCreatePortfolio(false);

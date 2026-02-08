@@ -10,8 +10,9 @@ const TrendingUp = () => <Icon d="M23 6l-9.5 9.5-5-5L1 18 M17 6h6v6" />;
 
 const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4', '#ef4444', '#eab308'];
 
-export function PortfolioBuilder({ portfolios, universeProducts, onSave, onCancel, getProductLabels }) {
-  const [portfolio, setPortfolio] = useState({ name: '', description: '', riskLevel: 'Moderate', holdings: [] });
+export function PortfolioBuilder({ portfolios, universeProducts, riskLevels = [], onSave, onCancel, getProductLabels }) {
+  const defaultRiskLevel = riskLevels.length > 0 ? riskLevels[0].name : 'Moderate';
+  const [portfolio, setPortfolio] = useState({ name: '', description: '', riskLevel: defaultRiskLevel, holdings: [] });
   const [selectedAssetClass, setSelectedAssetClass] = useState('all');
   const [selectedTag, setSelectedTag] = useState('all');
   const [validationErrors, setValidationErrors] = useState([]);
@@ -212,9 +213,17 @@ export function PortfolioBuilder({ portfolios, universeProducts, onSave, onCance
               onChange={e => setPortfolio({ ...portfolio, riskLevel: e.target.value })}
               style={{ ...s.input, cursor: 'pointer' }}
             >
-              <option>Conservative</option>
-              <option>Moderate</option>
-              <option>Aggressive</option>
+              {riskLevels.length > 0 ? (
+                riskLevels.map(rl => (
+                  <option key={rl.id} value={rl.name}>{rl.name}</option>
+                ))
+              ) : (
+                <>
+                  <option>Conservative</option>
+                  <option>Moderate</option>
+                  <option>Aggressive</option>
+                </>
+              )}
             </select>
           </div>
         </div>
