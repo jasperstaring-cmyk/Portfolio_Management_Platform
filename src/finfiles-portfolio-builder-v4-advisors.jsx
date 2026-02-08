@@ -4,6 +4,7 @@ import { ScreenerModule } from './ScreenerModule';
 import { UniverseModule } from './UniverseModule';
 import { PortfolioBuilder } from './PortfolioBuilder';
 import GoalPlanningModule from './GoalPlanningModule';
+import DashboardHome from './DashboardHome';
 import { EXTENDED_MOCK_PRODUCTS } from './mockProducts';
 import { ReportGenerator } from './utils/ReportGenerator';
 import { DataExporter } from './utils/DataExporter';
@@ -46,7 +47,7 @@ const PieChart = ({ data }) => {
 };
 
 function App() {
-  const [activeTab, setActiveTab] = useState('screener');
+  const [activeTab, setActiveTab] = useState('home');
   const [allProducts] = useState(EXTENDED_MOCK_PRODUCTS);
   const [universeProducts, setUniverseProducts] = useState(MOCK_PRODUCTS);
   const [products] = useState(MOCK_PRODUCTS);
@@ -273,14 +274,16 @@ function App() {
         <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700, background: 'linear-gradient(135deg,#3b82f6,#8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>FinFiles Portfolio Builder</h1>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
-            {['screener', 'universe', 'portfolios', 'risk', 'clients', 'goals', 'users'].map(tab => (
-              <button key={tab} onClick={() => setActiveTab(tab)} style={{ padding: '0.625rem 1.25rem', background: activeTab === tab ? 'rgba(59,130,246,0.2)' : 'transparent', border: activeTab === tab ? '1px solid rgba(59,130,246,0.4)' : '1px solid transparent', borderRadius: '8px', color: activeTab === tab ? '#60a5fa' : '#94a3b8', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem', transition: 'all 0.2s' }}>{tab === 'screener' ? '🔎 Screener' : tab === 'universe' ? '🌐 Universe' : tab === 'portfolios' ? '📊 Model Portfolios' : tab === 'risk' ? '⚖️ Risk Profiles' : tab === 'clients' ? '👨‍💼 Clients' : tab === 'goals' ? '🎯 Goals' : '👥 Users'}</button>
+            {['home', 'screener', 'universe', 'portfolios', 'risk', 'clients', 'goals', 'users'].map(tab => (
+              <button key={tab} onClick={() => setActiveTab(tab)} style={{ padding: '0.625rem 1.25rem', background: activeTab === tab ? 'rgba(59,130,246,0.2)' : 'transparent', border: activeTab === tab ? '1px solid rgba(59,130,246,0.4)' : '1px solid transparent', borderRadius: '8px', color: activeTab === tab ? '#60a5fa' : '#94a3b8', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem', transition: 'all 0.2s' }}>{tab === 'home' ? '🏠 Home' : tab === 'screener' ? '🔎 Screener' : tab === 'universe' ? '🌐 Universe' : tab === 'portfolios' ? '📊 Model Portfolios' : tab === 'risk' ? '⚖️ Risk Profiles' : tab === 'clients' ? '👨‍💼 Clients' : tab === 'goals' ? '🎯 Goals' : '👥 Users'}</button>
             ))}
           </div>
         </div>
       </nav>
 
-      <main style={{ maxWidth: '1400px', margin: '0 auto', padding: '2rem' }}>
+      <main style={{ maxWidth: '1400px', margin: '0 auto', padding: activeTab === 'home' ? '0' : '2rem' }}>
+        {activeTab === 'home' && <DashboardHome />}
+
         {activeTab === 'screener' && (
           <div>
             <div style={{ marginBottom: '2rem' }}>
