@@ -183,79 +183,79 @@ export function ScreenerModule({ allProducts, universeProducts, onAddToUniverse 
           </button>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
+        <div style={{ display: 'grid', gap: '1rem' }}>
           {filteredProducts.length === 0 ? (
-            <div style={{ gridColumn: '1 / -1', padding: '3rem', textAlign: 'center', color: '#64748b' }}>
+            <div style={{ ...s.card, padding: '3rem', textAlign: 'center', color: '#64748b' }}>
               <p>No products match your filters</p>
             </div>
           ) : (
             filteredProducts.map(product => (
-              <div key={product.id} style={{ ...s.card, cursor: 'pointer', border: selectedProducts[product.id] ? '2px solid #3b82f6' : '1px solid rgba(148,163,184,0.1)', background: selectedProducts[product.id] ? 'rgba(59,130,246,0.05)' : 'rgba(15,23,42,0.6)' }}>
-                <div style={{ display: 'flex', alignItems: 'start', gap: '0.75rem', marginBottom: '1rem' }}>
+              <div key={product.id} style={{ ...s.card, border: selectedProducts[product.id] ? '2px solid rgba(59,130,246,0.5)' : s.card.border }}>
+                <div style={{ display: 'flex', gap: '1rem' }}>
                   <input
                     type="checkbox"
                     checked={selectedProducts[product.id] || false}
                     onChange={() => toggleProduct(product.id)}
-                    style={{ width: '20px', height: '20px', marginTop: '0.25rem', cursor: 'pointer' }}
+                    style={{ width: '20px', height: '20px', cursor: 'pointer', flexShrink: 0 }}
                   />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#f1f5f9' }}>{product.ticker}</div>
-                    <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.25rem' }}>{product.name}</div>
+
+                  <div style={{ flex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
+                        <div>
+                          <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#f1f5f9' }}>{product.ticker}</div>
+                          <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '0.25rem' }}>{product.name}</div>
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                          <span style={{ padding: '0.25rem 0.75rem', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, color: '#60a5fa' }}>
+                            {product.assetClass}
+                          </span>
+                          <span style={{ padding: '0.25rem 0.75rem', background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.3)', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, color: '#a78bfa' }}>
+                            {product.type}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '1rem', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(148,163,184,0.1)' }}>
+                        <div>
+                          <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '0.25rem' }}>Morningstar Rating</div>
+                          <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#f1f5f9' }}>
+                            <StarRating rating={product.morningstarRating} />
+                          </div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '0.25rem' }}>Expense Ratio</div>
+                          <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#f1f5f9' }}>{product.expenseRatio}%</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '0.25rem' }}>YTD Return</div>
+                          <div style={{ fontSize: '0.875rem', fontWeight: 600, color: product.ytdReturn > 0 ? '#10b981' : '#ef4444' }}>
+                            {product.ytdReturn > 0 ? '+' : ''}{product.ytdReturn}%
+                          </div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '0.25rem' }}>Risk Rating</div>
+                          <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#f1f5f9' }}>{product.riskRating}/5</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '0.25rem' }}>Region</div>
+                          <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#f1f5f9' }}>{product.region}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedProductDetail(product);
+                      }}
+                      style={{ padding: '0.5rem', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)', borderRadius: '8px', color: '#60a5fa', cursor: 'pointer', flexShrink: 0, marginLeft: '2rem' }}
+                      title="View Details"
+                    >
+                      <Eye />
+                    </button>
                   </div>
                 </div>
-
-                <div style={{ display: 'grid', gap: '0.75rem', fontSize: '0.875rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ color: '#94a3b8' }}>Rating:</span>
-                    <StarRating rating={product.morningstarRating} />
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#94a3b8' }}>Expense Ratio:</span>
-                    <span style={{ color: '#f1f5f9', fontWeight: 600 }}>{product.expenseRatio}%</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#94a3b8' }}>YTD Return:</span>
-                    <span style={{ color: product.ytdReturn > 0 ? '#10b981' : '#ef4444', fontWeight: 600 }}>{product.ytdReturn > 0 ? '+' : ''}{product.ytdReturn}%</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#94a3b8' }}>Risk:</span>
-                    <span style={{ color: '#f1f5f9', fontWeight: 600 }}>{product.riskRating}/5</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#94a3b8' }}>Asset Class:</span>
-                    <span style={{ color: '#f1f5f9', fontWeight: 600 }}>{product.assetClass}</span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: '#94a3b8' }}>Type:</span>
-                    <span style={{ color: '#f1f5f9', fontWeight: 600 }}>{product.type}</span>
-                  </div>
-                </div>
-
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedProductDetail(product);
-                  }}
-                  style={{
-                    marginTop: '0.75rem',
-                    width: '100%',
-                    padding: '0.625rem',
-                    background: 'rgba(59,130,246,0.1)',
-                    border: '1px solid rgba(59,130,246,0.3)',
-                    borderRadius: '6px',
-                    color: '#60a5fa',
-                    cursor: 'pointer',
-                    fontSize: '0.875rem',
-                    fontWeight: 600,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.5rem'
-                  }}
-                >
-                  <Eye />
-                  View Details
-                </button>
               </div>
             ))
           )}
