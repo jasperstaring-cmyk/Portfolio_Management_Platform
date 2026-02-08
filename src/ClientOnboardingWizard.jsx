@@ -94,9 +94,13 @@ const getRiskLevel = (score) => {
 };
 
 const getRecommendedPortfoliosByRisk = (riskScore, portfolios) => {
+  if (!portfolios || portfolios.length === 0) return [];
+
   const riskLevel = getRiskLevel(riskScore);
 
   return portfolios.filter(p => {
+    if (!p.holdings || !Array.isArray(p.holdings)) return false;
+
     const equityAllocation = p.holdings.reduce((sum, h) => {
       const product = h.product || {};
       return product.assetClass === 'Equity' ? sum + h.weight : sum;
@@ -111,6 +115,8 @@ const getRecommendedPortfoliosByRisk = (riskScore, portfolios) => {
 };
 
 const getRecommendedPortfolioForGoal = (riskScore, timeHorizon, portfolios) => {
+  if (!portfolios || portfolios.length === 0) return null;
+
   let adjustedRisk = riskScore;
 
   if (timeHorizon < 3) adjustedRisk = Math.min(adjustedRisk, 2.5);
@@ -121,7 +127,7 @@ const getRecommendedPortfolioForGoal = (riskScore, timeHorizon, portfolios) => {
   return suitable.length > 0 ? suitable[0] : null;
 };
 
-export default function ClientOnboardingWizard({ portfolios, universeProducts, onComplete, onCancel }) {
+export default function ClientOnboardingWizard({ portfolios = [], universeProducts = [], onComplete, onCancel }) {
   const [currentStep, setCurrentStep] = useState(1);
   const [clientInfo, setClientInfo] = useState({
     name: '',
@@ -153,10 +159,10 @@ export default function ClientOnboardingWizard({ portfolios, universeProducts, o
 
   const riskScore = useMemo(() => calculateRiskScore(riskAnswers), [riskAnswers]);
   const riskLevel = useMemo(() => getRiskLevel(riskScore), [riskScore]);
-  const recommendedPortfolios = useMemo(() =>
-    getRecommendedPortfoliosByRisk(riskScore, portfolios),
-    [riskScore, portfolios]
-  );
+  const recommendedPortfolios = useMemo(() => {
+    if (!portfolios || portfolios.length === 0) return [];
+    return getRecommendedPortfoliosByRisk(riskScore, portfolios);
+  }, [riskScore, portfolios]);
 
   const totalAUM = useMemo(() =>
     goals.reduce((sum, g) => {
@@ -170,6 +176,8 @@ export default function ClientOnboardingWizard({ portfolios, universeProducts, o
   );
 
   const consolidatedAllocation = useMemo(() => {
+    if (!universeProducts || !portfolios) return {};
+
     const allocation = {};
     goals.forEach(goal => {
       const portfolio = portfolios.find(p => p.id === goal.portfolioId);
