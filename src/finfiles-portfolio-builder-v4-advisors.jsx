@@ -119,8 +119,8 @@ function App() {
     return search && filter;
   });
 
-  const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4'];
-  const getPortfolioData = (portfolio) => portfolio.holdings.map((h, i) => ({ value: h.weight, color: colors[i % colors.length], label: products.find(p => p.id === h.productId)?.ticker || 'N/A' }));
+  const chartColors = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4'];
+  const getPortfolioData = (portfolio) => portfolio.holdings.map((h, i) => ({ value: h.weight, color: chartColors[i % chartColors.length], label: products.find(p => p.id === h.productId)?.ticker || 'N/A' }));
 
   const s = {
     input: { width: '100%', padding: '0.75rem', background: 'rgba(15,23,42,0.6)', border: '1px solid rgba(148,163,184,0.2)', borderRadius: '8px', color: '#f1f5f9', fontSize: '0.875rem', fontFamily: 'inherit' },
