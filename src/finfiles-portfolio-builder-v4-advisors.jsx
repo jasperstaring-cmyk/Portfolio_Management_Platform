@@ -81,14 +81,15 @@ function App() {
   const [newRisk, setNewRisk] = useState({ name: '', description: '', questions: [], scoringRules: [] });
 
   // NEW: Advisor Management State
-  const [advisors, setAdvisors] = useState([
-    { id: 'A1', name: 'Sarah Chen', email: 'sarah.chen@finfiles.com', active: true, assignedPortfolios: ['P1', 'P2'], assignedRiskProfiles: ['R1'], permissions: 'Full Access', joinedDate: '2025-11-15' },
-    { id: 'A2', name: 'Michael Rodriguez', email: 'michael.r@finfiles.com', active: true, assignedPortfolios: ['P2', 'P3'], assignedRiskProfiles: ['R1'], permissions: 'Full Access', joinedDate: '2025-12-03' },
-    { id: 'A3', name: 'Emily Watson', email: 'emily.watson@finfiles.com', active: false, assignedPortfolios: ['P1'], assignedRiskProfiles: [], permissions: 'Limited Access', joinedDate: '2025-10-22' }
+  const [users, setUsers] = useState([
+    { id: 'U1', name: 'Sarah Chen', email: 'sarah.chen@finfiles.com', active: true, assignedPortfolios: ['P1', 'P2'], assignedRiskProfiles: ['R1'], permissions: 'Full Access', role: 'Admin', joinedDate: '2025-11-15' },
+    { id: 'U2', name: 'Michael Rodriguez', email: 'michael.r@finfiles.com', active: true, assignedPortfolios: ['P2', 'P3'], assignedRiskProfiles: ['R1'], permissions: 'Full Access', role: 'Advisor', joinedDate: '2025-12-03' },
+    { id: 'U3', name: 'Emily Watson', email: 'emily.watson@finfiles.com', active: true, assignedPortfolios: ['P1'], assignedRiskProfiles: [], permissions: 'Limited Access', role: 'Investment Committee', joinedDate: '2025-10-22' },
+    { id: 'U4', name: 'James Cooper', email: 'james.cooper@finfiles.com', active: true, assignedPortfolios: [], assignedRiskProfiles: ['R1'], permissions: 'Limited Access', role: 'Compliance Officer', joinedDate: '2025-12-10' }
   ]);
-  const [showCreateAdvisor, setShowCreateAdvisor] = useState(false);
-  const [newAdvisor, setNewAdvisor] = useState({ name: '', email: '', permissions: 'Full Access', assignedPortfolios: [], assignedRiskProfiles: [] });
-  const [editingAdvisor, setEditingAdvisor] = useState(null);
+  const [showCreateUser, setShowCreateUser] = useState(false);
+  const [newUser, setNewUser] = useState({ name: '', email: '', permissions: 'Full Access', role: 'Advisor', assignedPortfolios: [], assignedRiskProfiles: [] });
+  const [editingUser, setEditingUser] = useState(null);
 
   // Risk Level Management State
   const [riskLevels, setRiskLevels] = useState([
@@ -165,55 +166,57 @@ function App() {
   const calcScore = () => Object.keys(previewAnswers).reduce((s, qid) => { const q = newRisk.questions.find(qu => qu.id === qid); return s + (q?.options[previewAnswers[qid]]?.points || 0); }, 0);
   const getRecommended = (score) => { const rule = newRisk.scoringRules.find(r => score >= r.minScore && score <= r.maxScore); return rule ? portfolios.find(p => p.id === rule.portfolioId) : null; };
 
-  // NEW: Advisor Management Functions
-  const saveAdvisor = () => {
-    if (!newAdvisor.name || !newAdvisor.email) return alert('Name and email required');
-    if (editingAdvisor) {
-      setAdvisors(advisors.map(a => a.id === editingAdvisor.id ? { ...editingAdvisor, ...newAdvisor } : a));
-      setEditingAdvisor(null);
+  // User Management Functions
+  const saveUser = () => {
+    if (!newUser.name || !newUser.email) return alert('Name and email required');
+    if (!newUser.role) return alert('Role is required');
+    if (editingUser) {
+      setUsers(users.map(u => u.id === editingUser.id ? { ...editingUser, ...newUser } : u));
+      setEditingUser(null);
     } else {
-      setAdvisors([...advisors, { ...newAdvisor, id: `A${advisors.length + 1}`, active: true, joinedDate: new Date().toISOString().split('T')[0] }]);
+      setUsers([...users, { ...newUser, id: `U${users.length + 1}`, active: true, joinedDate: new Date().toISOString().split('T')[0] }]);
     }
-    setShowCreateAdvisor(false);
-    setNewAdvisor({ name: '', email: '', permissions: 'Full Access', assignedPortfolios: [], assignedRiskProfiles: [] });
+    setShowCreateUser(false);
+    setNewUser({ name: '', email: '', permissions: 'Full Access', role: 'Advisor', assignedPortfolios: [], assignedRiskProfiles: [] });
   };
 
-  const toggleAdvisorStatus = (id) => {
-    setAdvisors(advisors.map(a => a.id === id ? { ...a, active: !a.active } : a));
+  const toggleUserStatus = (id) => {
+    setUsers(users.map(u => u.id === id ? { ...u, active: !u.active } : u));
   };
 
-  const deleteAdvisor = (id) => {
-    if (confirm('Delete this advisor? This action cannot be undone.')) {
-      setAdvisors(advisors.filter(a => a.id !== id));
+  const deleteUser = (id) => {
+    if (confirm('Delete this user? This action cannot be undone.')) {
+      setUsers(users.filter(u => u.id !== id));
     }
   };
 
-  const editAdvisor = (advisor) => {
-    setEditingAdvisor(advisor);
-    setNewAdvisor({
-      name: advisor.name,
-      email: advisor.email,
-      permissions: advisor.permissions,
-      assignedPortfolios: advisor.assignedPortfolios,
-      assignedRiskProfiles: advisor.assignedRiskProfiles
+  const editUser = (user) => {
+    setEditingUser(user);
+    setNewUser({
+      name: user.name,
+      email: user.email,
+      permissions: user.permissions,
+      role: user.role,
+      assignedPortfolios: user.assignedPortfolios,
+      assignedRiskProfiles: user.assignedRiskProfiles
     });
-    setShowCreateAdvisor(true);
+    setShowCreateUser(true);
   };
 
   const togglePortfolioAssignment = (portfolioId) => {
-    const current = newAdvisor.assignedPortfolios;
-    setNewAdvisor({
-      ...newAdvisor,
-      assignedPortfolios: current.includes(portfolioId) 
+    const current = newUser.assignedPortfolios;
+    setNewUser({
+      ...newUser,
+      assignedPortfolios: current.includes(portfolioId)
         ? current.filter(id => id !== portfolioId)
         : [...current, portfolioId]
     });
   };
 
   const toggleRiskProfileAssignment = (riskId) => {
-    const current = newAdvisor.assignedRiskProfiles;
-    setNewAdvisor({
-      ...newAdvisor,
+    const current = newUser.assignedRiskProfiles;
+    setNewUser({
+      ...newUser,
       assignedRiskProfiles: current.includes(riskId)
         ? current.filter(id => id !== riskId)
         : [...current, riskId]
@@ -245,14 +248,24 @@ function App() {
 
   const getRiskLevelByName = (name) => riskLevels.find(rl => rl.name === name) || { color: '#94a3b8' };
 
+  const getRoleColor = (role) => {
+    const colors = {
+      'Admin': { bg: 'rgba(139,92,246,0.1)', border: 'rgba(139,92,246,0.3)', text: '#a78bfa' },
+      'Advisor': { bg: 'rgba(59,130,246,0.1)', border: 'rgba(59,130,246,0.3)', text: '#60a5fa' },
+      'Investment Committee': { bg: 'rgba(99,102,241,0.1)', border: 'rgba(99,102,241,0.3)', text: '#818cf8' },
+      'Compliance Officer': { bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.3)', text: '#fbbf24' }
+    };
+    return colors[role] || { bg: 'rgba(148,163,184,0.1)', border: 'rgba(148,163,184,0.3)', text: '#94a3b8' };
+  };
+
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#0f172a 0%,#1e293b 100%)', color: '#f1f5f9', fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif' }}>
       <nav style={{ background: 'rgba(15,23,42,0.95)', borderBottom: '1px solid rgba(148,163,184,0.1)', padding: '1rem 2rem', position: 'sticky', top: 0, zIndex: 100, backdropFilter: 'blur(10px)' }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700, background: 'linear-gradient(135deg,#3b82f6,#8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>FinFiles Portfolio Builder</h1>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
-            {['screener', 'universe', 'portfolios', 'risk', 'clients', 'advisors'].map(tab => (
-              <button key={tab} onClick={() => setActiveTab(tab)} style={{ padding: '0.625rem 1.25rem', background: activeTab === tab ? 'rgba(59,130,246,0.2)' : 'transparent', border: activeTab === tab ? '1px solid rgba(59,130,246,0.4)' : '1px solid transparent', borderRadius: '8px', color: activeTab === tab ? '#60a5fa' : '#94a3b8', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem', transition: 'all 0.2s' }}>{tab === 'screener' ? '🔎 Screener' : tab === 'universe' ? '🌐 Universe' : tab === 'portfolios' ? '📊 Model Portfolios' : tab === 'risk' ? '⚖️ Risk Profiles' : tab === 'clients' ? '👨‍💼 Clients' : '👥 Advisors'}</button>
+            {['screener', 'universe', 'portfolios', 'risk', 'clients', 'users'].map(tab => (
+              <button key={tab} onClick={() => setActiveTab(tab)} style={{ padding: '0.625rem 1.25rem', background: activeTab === tab ? 'rgba(59,130,246,0.2)' : 'transparent', border: activeTab === tab ? '1px solid rgba(59,130,246,0.4)' : '1px solid transparent', borderRadius: '8px', color: activeTab === tab ? '#60a5fa' : '#94a3b8', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem', transition: 'all 0.2s' }}>{tab === 'screener' ? '🔎 Screener' : tab === 'universe' ? '🌐 Universe' : tab === 'portfolios' ? '📊 Model Portfolios' : tab === 'risk' ? '⚖️ Risk Profiles' : tab === 'clients' ? '👨‍💼 Clients' : '👥 Users'}</button>
             ))}
           </div>
         </div>
@@ -486,7 +499,7 @@ function App() {
                     </>
                   ) : (
                     <div>
-                      <div style={{ padding: '1rem', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)', borderRadius: '8px', marginBottom: '2rem', fontSize: '0.875rem', color: '#60a5fa' }}>📋 Preview: How advisors/clients will see this</div>
+                      <div style={{ padding: '1rem', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)', borderRadius: '8px', marginBottom: '2rem', fontSize: '0.875rem', color: '#60a5fa' }}>📋 Preview: How users/clients will see this</div>
                       <h3 style={{ margin: '0 0 0.5rem', fontSize: '1.25rem', fontWeight: 700 }}>{newRisk.name || 'Risk Assessment'}</h3>
                       <p style={{ margin: '0 0 2rem', color: '#94a3b8', fontSize: '0.875rem' }}>{newRisk.description || 'Complete this questionnaire'}</p>
                       {newRisk.questions.map((q, qi) => (
@@ -547,16 +560,16 @@ function App() {
           <ClientPortfolioModule products={products} portfolios={portfolios} />
         )}
 
-        {activeTab === 'advisors' && (
+        {activeTab === 'users' && (
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
               <div>
-                <h2 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 700 }}>Advisor Management</h2>
-                <p style={{ margin: '0.5rem 0 0', color: '#94a3b8', fontSize: '0.875rem' }}>Onboard and manage financial advisors</p>
+                <h2 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 700 }}>User Management</h2>
+                <p style={{ margin: '0.5rem 0 0', color: '#94a3b8', fontSize: '0.875rem' }}>Manage system users and their roles</p>
               </div>
-              {!showCreateAdvisor && (
-                <button onClick={() => setShowCreateAdvisor(true)} style={s.btn}>
-                  <UserPlus />Onboard Advisor
+              {!showCreateUser && (
+                <button onClick={() => setShowCreateUser(true)} style={s.btn}>
+                  <UserPlus />Add User
                 </button>
               )}
             </div>
@@ -564,63 +577,76 @@ function App() {
             {/* Summary Stats */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
               <div style={{ padding: '1.5rem', background: 'linear-gradient(135deg, rgba(59,130,246,0.1), rgba(59,130,246,0.05))', border: '1px solid rgba(59,130,246,0.3)', borderRadius: '12px' }}>
-                <div style={{ fontSize: '0.75rem', color: '#60a5fa', marginBottom: '0.5rem', fontWeight: 600 }}>TOTAL ADVISORS</div>
-                <div style={{ fontSize: '2.5rem', fontWeight: 700 }}>{advisors.length}</div>
+                <div style={{ fontSize: '0.75rem', color: '#60a5fa', marginBottom: '0.5rem', fontWeight: 600 }}>TOTAL USERS</div>
+                <div style={{ fontSize: '2.5rem', fontWeight: 700 }}>{users.length}</div>
               </div>
               <div style={{ padding: '1.5rem', background: 'linear-gradient(135deg, rgba(16,185,129,0.1), rgba(16,185,129,0.05))', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '12px' }}>
                 <div style={{ fontSize: '0.75rem', color: '#10b981', marginBottom: '0.5rem', fontWeight: 600 }}>ACTIVE</div>
-                <div style={{ fontSize: '2.5rem', fontWeight: 700 }}>{advisors.filter(a => a.active).length}</div>
+                <div style={{ fontSize: '2.5rem', fontWeight: 700 }}>{users.filter(u => u.active).length}</div>
               </div>
               <div style={{ padding: '1.5rem', background: 'linear-gradient(135deg, rgba(245,158,11,0.1), rgba(245,158,11,0.05))', border: '1px solid rgba(245,158,11,0.3)', borderRadius: '12px' }}>
                 <div style={{ fontSize: '0.75rem', color: '#f59e0b', marginBottom: '0.5rem', fontWeight: 600 }}>PORTFOLIOS ASSIGNED</div>
-                <div style={{ fontSize: '2.5rem', fontWeight: 700 }}>{advisors.reduce((sum, a) => sum + a.assignedPortfolios.length, 0)}</div>
+                <div style={{ fontSize: '2.5rem', fontWeight: 700 }}>{users.reduce((sum, u) => sum + u.assignedPortfolios.length, 0)}</div>
               </div>
               <div style={{ padding: '1.5rem', background: 'linear-gradient(135deg, rgba(139,92,246,0.1), rgba(139,92,246,0.05))', border: '1px solid rgba(139,92,246,0.3)', borderRadius: '12px' }}>
                 <div style={{ fontSize: '0.75rem', color: '#a78bfa', marginBottom: '0.5rem', fontWeight: 600 }}>RISK PROFILES ASSIGNED</div>
-                <div style={{ fontSize: '2.5rem', fontWeight: 700 }}>{advisors.reduce((sum, a) => sum + a.assignedRiskProfiles.length, 0)}</div>
+                <div style={{ fontSize: '2.5rem', fontWeight: 700 }}>{users.reduce((sum, u) => sum + u.assignedRiskProfiles.length, 0)}</div>
               </div>
             </div>
 
-            {!showCreateAdvisor ? (
+            {!showCreateUser ? (
               <div style={{ display: 'grid', gap: '1rem' }}>
-                {advisors.map(advisor => (
-                  <div key={advisor.id} style={{ ...s.card, opacity: advisor.active ? 1 : 0.6 }}>
+                {users.map(user => {
+                  const roleColors = getRoleColor(user.role);
+                  return (
+                  <div key={user.id} style={{ ...s.card, opacity: user.active ? 1 : 0.6 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                       <div style={{ flex: 1 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' }}>
                           <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem', fontWeight: 700 }}>
-                            {advisor.name.split(' ').map(n => n[0]).join('')}
+                            {user.name.split(' ').map(n => n[0]).join('')}
                           </div>
                           <div>
-                            <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 700 }}>{advisor.name}</h3>
-                            <div style={{ fontSize: '0.875rem', color: '#94a3b8', marginTop: '0.25rem' }}>{advisor.email}</div>
+                            <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 700 }}>{user.name}</h3>
+                            <div style={{ fontSize: '0.875rem', color: '#94a3b8', marginTop: '0.25rem' }}>{user.email}</div>
                           </div>
-                          <div style={{ display: 'flex', gap: '0.5rem', marginLeft: '1rem' }}>
-                            <span style={{ 
-                              padding: '0.25rem 0.75rem', 
-                              background: advisor.active ? 'rgba(16,185,129,0.1)' : 'rgba(148,163,184,0.1)', 
-                              border: `1px solid ${advisor.active ? 'rgba(16,185,129,0.3)' : 'rgba(148,163,184,0.3)'}`, 
-                              borderRadius: '6px', 
-                              fontSize: '0.75rem', 
-                              fontWeight: 600, 
-                              color: advisor.active ? '#10b981' : '#94a3b8' 
+                          <div style={{ display: 'flex', gap: '0.5rem', marginLeft: '1rem', flexWrap: 'wrap' }}>
+                            <span style={{
+                              padding: '0.25rem 0.75rem',
+                              background: user.active ? 'rgba(16,185,129,0.1)' : 'rgba(148,163,184,0.1)',
+                              border: `1px solid ${user.active ? 'rgba(16,185,129,0.3)' : 'rgba(148,163,184,0.3)'}`,
+                              borderRadius: '6px',
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              color: user.active ? '#10b981' : '#94a3b8'
                             }}>
-                              {advisor.active ? '● Active' : '○ Inactive'}
+                              {user.active ? '● Active' : '○ Inactive'}
                             </span>
-                            <span style={{ 
-                              padding: '0.25rem 0.75rem', 
-                              background: 'rgba(139,92,246,0.1)', 
-                              border: '1px solid rgba(139,92,246,0.3)', 
-                              borderRadius: '6px', 
-                              fontSize: '0.75rem', 
-                              fontWeight: 600, 
+                            <span style={{
+                              padding: '0.25rem 0.75rem',
+                              background: roleColors.bg,
+                              border: `1px solid ${roleColors.border}`,
+                              borderRadius: '6px',
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              color: roleColors.text
+                            }}>
+                              {user.role}
+                            </span>
+                            <span style={{
+                              padding: '0.25rem 0.75rem',
+                              background: 'rgba(139,92,246,0.1)',
+                              border: '1px solid rgba(139,92,246,0.3)',
+                              borderRadius: '6px',
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
                               color: '#a78bfa',
                               display: 'flex',
                               alignItems: 'center',
                               gap: '0.25rem'
                             }}>
                               <Shield />
-                              {advisor.permissions}
+                              {user.permissions}
                             </span>
                           </div>
                         </div>
@@ -628,16 +654,16 @@ function App() {
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem', marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid rgba(148,163,184,0.1)' }}>
                           <div>
                             <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '0.5rem' }}>Joined</div>
-                            <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>{new Date(advisor.joinedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                            <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>{new Date(user.joinedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
                           </div>
                           <div>
                             <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '0.5rem' }}>Assigned Portfolios</div>
                             <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>
-                              {advisor.assignedPortfolios.length === 0 ? (
+                              {user.assignedPortfolios.length === 0 ? (
                                 <span style={{ color: '#64748b' }}>None assigned</span>
                               ) : (
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
-                                  {advisor.assignedPortfolios.map(pid => {
+                                  {user.assignedPortfolios.map(pid => {
                                     const portfolio = portfolios.find(p => p.id === pid);
                                     return portfolio ? (
                                       <span key={pid} style={{ 
@@ -659,11 +685,11 @@ function App() {
                           <div>
                             <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '0.5rem' }}>Assigned Risk Profiles</div>
                             <div style={{ fontSize: '0.875rem', fontWeight: 600 }}>
-                              {advisor.assignedRiskProfiles.length === 0 ? (
+                              {user.assignedRiskProfiles.length === 0 ? (
                                 <span style={{ color: '#64748b' }}>None assigned</span>
                               ) : (
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
-                                  {advisor.assignedRiskProfiles.map(rid => {
+                                  {user.assignedRiskProfiles.map(rid => {
                                     const risk = riskProfiles.find(r => r.id === rid);
                                     return risk ? (
                                       <span key={rid} style={{ 
@@ -686,59 +712,60 @@ function App() {
                       </div>
 
                       <div style={{ display: 'flex', gap: '0.5rem', marginLeft: '2rem' }}>
-                        <button 
-                          onClick={() => toggleAdvisorStatus(advisor.id)} 
-                          style={{ 
-                            padding: '0.5rem', 
-                            background: advisor.active ? 'rgba(245,158,11,0.1)' : 'rgba(16,185,129,0.1)', 
-                            border: `1px solid ${advisor.active ? 'rgba(245,158,11,0.3)' : 'rgba(16,185,129,0.3)'}`, 
-                            borderRadius: '8px', 
-                            color: advisor.active ? '#f59e0b' : '#10b981', 
+                        <button
+                          onClick={() => toggleUserStatus(user.id)}
+                          style={{
+                            padding: '0.5rem',
+                            background: user.active ? 'rgba(245,158,11,0.1)' : 'rgba(16,185,129,0.1)',
+                            border: `1px solid ${user.active ? 'rgba(245,158,11,0.3)' : 'rgba(16,185,129,0.3)'}`,
+                            borderRadius: '8px',
+                            color: user.active ? '#f59e0b' : '#10b981',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center'
                           }}
-                          title={advisor.active ? 'Disable advisor' : 'Enable advisor'}
+                          title={user.active ? 'Disable user' : 'Enable user'}
                         >
-                          {advisor.active ? <ToggleRight /> : <ToggleLeft />}
+                          {user.active ? <ToggleRight /> : <ToggleLeft />}
                         </button>
-                        <button 
-                          onClick={() => editAdvisor(advisor)} 
-                          style={{ 
-                            padding: '0.5rem', 
-                            background: 'rgba(59,130,246,0.1)', 
-                            border: '1px solid rgba(59,130,246,0.3)', 
-                            borderRadius: '8px', 
-                            color: '#60a5fa', 
-                            cursor: 'pointer' 
+                        <button
+                          onClick={() => editUser(user)}
+                          style={{
+                            padding: '0.5rem',
+                            background: 'rgba(59,130,246,0.1)',
+                            border: '1px solid rgba(59,130,246,0.3)',
+                            borderRadius: '8px',
+                            color: '#60a5fa',
+                            cursor: 'pointer'
                           }}
-                          title="Edit advisor"
+                          title="Edit user"
                         >
                           <Edit />
                         </button>
-                        <button 
-                          onClick={() => deleteAdvisor(advisor.id)} 
-                          style={{ 
-                            padding: '0.5rem', 
-                            background: 'rgba(239,68,68,0.1)', 
-                            border: '1px solid rgba(239,68,68,0.3)', 
-                            borderRadius: '8px', 
-                            color: '#ef4444', 
-                            cursor: 'pointer' 
+                        <button
+                          onClick={() => deleteUser(user.id)}
+                          style={{
+                            padding: '0.5rem',
+                            background: 'rgba(239,68,68,0.1)',
+                            border: '1px solid rgba(239,68,68,0.3)',
+                            borderRadius: '8px',
+                            color: '#ef4444',
+                            cursor: 'pointer'
                           }}
-                          title="Delete advisor"
+                          title="Delete user"
                         >
                           <Trash />
                         </button>
                       </div>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div style={s.card}>
                 <h3 style={{ margin: '0 0 1.5rem', fontSize: '1.25rem', fontWeight: 700 }}>
-                  {editingAdvisor ? 'Edit Advisor' : 'Onboard New Advisor'}
+                  {editingUser ? 'Edit User' : 'Add New User'}
                 </h3>
 
                 <div style={{ display: 'grid', gap: '1.5rem', marginBottom: '2rem' }}>
@@ -746,12 +773,12 @@ function App() {
                     <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem', color: '#94a3b8' }}>
                       Full Name *
                     </label>
-                    <input 
-                      type="text" 
-                      value={newAdvisor.name} 
-                      onChange={e => setNewAdvisor({ ...newAdvisor, name: e.target.value })} 
-                      placeholder="e.g., Sarah Chen" 
-                      style={s.input} 
+                    <input
+                      type="text"
+                      value={newUser.name}
+                      onChange={e => setNewUser({ ...newUser, name: e.target.value })}
+                      placeholder="e.g., Sarah Chen"
+                      style={s.input}
                     />
                   </div>
 
@@ -759,22 +786,38 @@ function App() {
                     <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem', color: '#94a3b8' }}>
                       Email Address *
                     </label>
-                    <input 
-                      type="email" 
-                      value={newAdvisor.email} 
-                      onChange={e => setNewAdvisor({ ...newAdvisor, email: e.target.value })} 
-                      placeholder="sarah.chen@finfiles.com" 
-                      style={s.input} 
+                    <input
+                      type="email"
+                      value={newUser.email}
+                      onChange={e => setNewUser({ ...newUser, email: e.target.value })}
+                      placeholder="sarah.chen@finfiles.com"
+                      style={s.input}
                     />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem', color: '#94a3b8' }}>
+                      Role *
+                    </label>
+                    <select
+                      value={newUser.role}
+                      onChange={e => setNewUser({ ...newUser, role: e.target.value })}
+                      style={{ ...s.input, cursor: 'pointer' }}
+                    >
+                      <option value="Admin">Admin - Full system administrator</option>
+                      <option value="Advisor">Advisor - Financial advisor with client management</option>
+                      <option value="Investment Committee">Investment Committee - Portfolio review and approval</option>
+                      <option value="Compliance Officer">Compliance Officer - Compliance oversight</option>
+                    </select>
                   </div>
 
                   <div>
                     <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem', color: '#94a3b8' }}>
                       Permissions Level
                     </label>
-                    <select 
-                      value={newAdvisor.permissions} 
-                      onChange={e => setNewAdvisor({ ...newAdvisor, permissions: e.target.value })} 
+                    <select
+                      value={newUser.permissions}
+                      onChange={e => setNewUser({ ...newUser, permissions: e.target.value })}
                       style={{ ...s.input, cursor: 'pointer' }}
                     >
                       <option value="Full Access">Full Access - Can view and use all portfolios & risk profiles</option>
@@ -789,7 +832,7 @@ function App() {
                   <h4 style={{ margin: '0 0 1rem', fontSize: '1rem', fontWeight: 600 }}>
                     Assign Model Portfolios
                     <span style={{ marginLeft: '0.5rem', fontSize: '0.875rem', fontWeight: 400, color: '#64748b' }}>
-                      ({newAdvisor.assignedPortfolios.length} selected)
+                      ({newUser.assignedPortfolios.length} selected)
                     </span>
                   </h4>
                   {portfolios.length === 0 ? (
@@ -805,8 +848,8 @@ function App() {
                             display: 'flex', 
                             alignItems: 'center', 
                             padding: '1rem', 
-                            background: newAdvisor.assignedPortfolios.includes(portfolio.id) ? 'rgba(59,130,246,0.1)' : 'rgba(15,23,42,0.4)', 
-                            border: `1px solid ${newAdvisor.assignedPortfolios.includes(portfolio.id) ? 'rgba(59,130,246,0.3)' : 'rgba(148,163,184,0.1)'}`, 
+                            background: newUser.assignedPortfolios.includes(portfolio.id) ? 'rgba(59,130,246,0.1)' : 'rgba(15,23,42,0.4)', 
+                            border: `1px solid ${newUser.assignedPortfolios.includes(portfolio.id) ? 'rgba(59,130,246,0.3)' : 'rgba(148,163,184,0.1)'}`, 
                             borderRadius: '8px', 
                             cursor: 'pointer',
                             transition: 'all 0.2s'
@@ -814,7 +857,7 @@ function App() {
                         >
                           <input 
                             type="checkbox" 
-                            checked={newAdvisor.assignedPortfolios.includes(portfolio.id)} 
+                            checked={newUser.assignedPortfolios.includes(portfolio.id)} 
                             onChange={() => togglePortfolioAssignment(portfolio.id)} 
                             style={{ marginRight: '0.75rem', cursor: 'pointer', width: '18px', height: '18px' }} 
                           />
@@ -848,7 +891,7 @@ function App() {
                   <h4 style={{ margin: '0 0 1rem', fontSize: '1rem', fontWeight: 600 }}>
                     Assign Risk Profiles
                     <span style={{ marginLeft: '0.5rem', fontSize: '0.875rem', fontWeight: 400, color: '#64748b' }}>
-                      ({newAdvisor.assignedRiskProfiles.length} selected)
+                      ({newUser.assignedRiskProfiles.length} selected)
                     </span>
                   </h4>
                   {riskProfiles.length === 0 ? (
@@ -864,8 +907,8 @@ function App() {
                             display: 'flex', 
                             alignItems: 'center', 
                             padding: '1rem', 
-                            background: newAdvisor.assignedRiskProfiles.includes(risk.id) ? 'rgba(139,92,246,0.1)' : 'rgba(15,23,42,0.4)', 
-                            border: `1px solid ${newAdvisor.assignedRiskProfiles.includes(risk.id) ? 'rgba(139,92,246,0.3)' : 'rgba(148,163,184,0.1)'}`, 
+                            background: newUser.assignedRiskProfiles.includes(risk.id) ? 'rgba(139,92,246,0.1)' : 'rgba(15,23,42,0.4)', 
+                            border: `1px solid ${newUser.assignedRiskProfiles.includes(risk.id) ? 'rgba(139,92,246,0.3)' : 'rgba(148,163,184,0.1)'}`, 
                             borderRadius: '8px', 
                             cursor: 'pointer',
                             transition: 'all 0.2s'
@@ -873,7 +916,7 @@ function App() {
                         >
                           <input 
                             type="checkbox" 
-                            checked={newAdvisor.assignedRiskProfiles.includes(risk.id)} 
+                            checked={newUser.assignedRiskProfiles.includes(risk.id)} 
                             onChange={() => toggleRiskProfileAssignment(risk.id)} 
                             style={{ marginRight: '0.75rem', cursor: 'pointer', width: '18px', height: '18px' }} 
                           />
@@ -903,31 +946,31 @@ function App() {
                 </div>
 
                 <div style={{ display: 'flex', gap: '1rem' }}>
-                  <button 
-                    onClick={() => { 
-                      setShowCreateAdvisor(false); 
-                      setNewAdvisor({ name: '', email: '', permissions: 'Full Access', assignedPortfolios: [], assignedRiskProfiles: [] }); 
-                      setEditingAdvisor(null);
-                    }} 
-                    style={{ 
-                      flex: 1, 
-                      padding: '0.875rem', 
-                      background: 'rgba(148,163,184,0.1)', 
-                      border: '1px solid rgba(148,163,184,0.2)', 
-                      borderRadius: '8px', 
-                      color: '#f1f5f9', 
-                      cursor: 'pointer', 
-                      fontWeight: 500 
+                  <button
+                    onClick={() => {
+                      setShowCreateUser(false);
+                      setNewUser({ name: '', email: '', permissions: 'Full Access', role: 'Advisor', assignedPortfolios: [], assignedRiskProfiles: [] });
+                      setEditingUser(null);
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '0.875rem',
+                      background: 'rgba(148,163,184,0.1)',
+                      border: '1px solid rgba(148,163,184,0.2)',
+                      borderRadius: '8px',
+                      color: '#f1f5f9',
+                      cursor: 'pointer',
+                      fontWeight: 500
                     }}
                   >
                     Cancel
                   </button>
-                  <button 
-                    onClick={saveAdvisor} 
+                  <button
+                    onClick={saveUser}
                     style={{ flex: 1, ...s.btn }}
                   >
                     <Check />
-                    {editingAdvisor ? 'Update Advisor' : 'Save Advisor'}
+                    {editingUser ? 'Update User' : 'Save User'}
                   </button>
                 </div>
               </div>
