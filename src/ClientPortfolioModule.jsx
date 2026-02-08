@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ClientOnboardingWizard from './ClientOnboardingWizard';
 
 const Icon = ({ d, size = 18 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d={d}/></svg>;
 const PlusCircle = () => <Icon d="M12 2 A10 10 0 1 1 2 12 A10 10 0 0 1 12 2 M12 8 L12 16 M8 12 L16 12" />;
@@ -64,10 +65,9 @@ export function ClientPortfolioModule({ products, portfolios }) {
   ]);
 
   const [selectedClient, setSelectedClient] = useState(null);
-  const [showCreateClient, setShowCreateClient] = useState(false);
+  const [showWizard, setShowWizard] = useState(false);
   const [showAddGoal, setShowAddGoal] = useState(false);
   const [showConsolidatedView, setShowConsolidatedView] = useState(false);
-  const [newClient, setNewClient] = useState({ name: '', email: '' });
   const [newGoal, setNewGoal] = useState({ name: '', targetAmount: 0, timeHorizon: '', portfolioId: '', useCustom: false, customHoldings: [] });
 
   const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4'];
@@ -128,19 +128,23 @@ export function ClientPortfolioModule({ products, portfolios }) {
     }));
   };
 
-  const saveClient = () => {
-    if (!newClient.name || !newClient.email) return alert('Name and email required');
+  const handleWizardComplete = (clientData) => {
     const newClientObj = {
-      ...newClient,
       id: `C${clients.length + 1}`,
+      name: clientData.name,
+      email: clientData.email,
+      phone: clientData.phone,
+      dateOfBirth: clientData.dateOfBirth,
+      riskLevel: clientData.riskProfile.level,
+      riskScore: clientData.riskProfile.score,
+      riskAnswers: clientData.riskProfile.answers,
       onboardedDate: new Date().toISOString().split('T')[0],
-      goals: [],
-      riskScore: Math.floor(Math.random() * 15) + 5,
-      riskLevel: ['Conservative', 'Moderate', 'Aggressive'][Math.floor(Math.random() * 3)]
+      goals: clientData.goals,
+      totalAUM: clientData.totalAUM
     };
     setClients([...clients, newClientObj]);
-    setShowCreateClient(false);
-    setNewClient({ name: '', email: '' });
+    setShowWizard(false);
+    setSelectedClient(newClientObj);
   };
 
   const addGoalHolding = () => {
@@ -199,11 +203,9 @@ export function ClientPortfolioModule({ products, portfolios }) {
               <h2 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 700 }}>Client Portfolio Management</h2>
               <p style={{ margin: '0.5rem 0 0', color: '#94a3b8', fontSize: '0.875rem' }}>Onboard clients and build goal-based portfolios</p>
             </div>
-            {!showCreateClient && (
-              <button onClick={() => setShowCreateClient(true)} style={s.btn}>
-                <UserPlus />Onboard Client
-              </button>
-            )}
+            <button onClick={() => setShowWizard(true)} style={s.btn}>
+              <UserPlus />Onboard Client
+            </button>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
@@ -225,29 +227,8 @@ export function ClientPortfolioModule({ products, portfolios }) {
             </div>
           </div>
 
-          {showCreateClient && (
-            <div style={{ ...s.card, marginBottom: '2rem' }}>
-              <h3 style={{ margin: '0 0 1.5rem', fontSize: '1.25rem', fontWeight: 700 }}>Onboard New Client</h3>
-              <div style={{ display: 'grid', gap: '1.5rem', marginBottom: '2rem' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem', color: '#94a3b8' }}>Client Name *</label>
-                  <input type="text" value={newClient.name} onChange={e => setNewClient({ ...newClient, name: e.target.value })} placeholder="e.g., John Smith" style={s.input} />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem', color: '#94a3b8' }}>Email Address *</label>
-                  <input type="email" value={newClient.email} onChange={e => setNewClient({ ...newClient, email: e.target.value })} placeholder="john.smith@email.com" style={s.input} />
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <button onClick={() => { setShowCreateClient(false); setNewClient({ name: '', email: '' }); }} style={{ flex: 1, padding: '0.875rem', background: 'rgba(148,163,184,0.1)', border: '1px solid rgba(148,163,184,0.2)', borderRadius: '8px', color: '#f1f5f9', cursor: 'pointer', fontWeight: 500 }}>Cancel</button>
-                <button onClick={saveClient} style={{ flex: 1, ...s.btn }}><Check />Save Client</button>
-              </div>
-            </div>
-          )}
-
-          {!showCreateClient && (
-            <div style={{ display: 'grid', gap: '1rem' }}>
-              {clients.map(client => {
+          <div style={{ display: 'grid', gap: '1rem' }}>
+            {clients.map(client => {
                 const totalInvested = client.goals.reduce((sum, g) => sum + g.targetAmount, 0);
                 return (
                   <div key={client.id} style={s.card} onClick={() => setSelectedClient(client)}>
@@ -269,8 +250,7 @@ export function ClientPortfolioModule({ products, portfolios }) {
                   </div>
                 );
               })}
-            </div>
-          )}
+          </div>
         </>
       ) : (
         <div>
@@ -302,6 +282,15 @@ export function ClientPortfolioModule({ products, portfolios }) {
             )}
           </div>
         </div>
+      )}
+
+      {showWizard && (
+        <ClientOnboardingWizard
+          portfolios={portfolios}
+          universeProducts={products}
+          onComplete={handleWizardComplete}
+          onCancel={() => setShowWizard(false)}
+        />
       )}
     </div>
   );
