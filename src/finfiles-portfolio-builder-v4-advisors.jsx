@@ -315,7 +315,10 @@ function App() {
                 <div key={r.id} style={s.card}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1.5rem' }}>
                     <div><h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>{r.name}</h3><p style={{ margin: '0.5rem 0 0', color: '#94a3b8', fontSize: '0.875rem' }}>{r.description}</p></div>
-                    <button onClick={() => deleteRisk(r.id)} style={{ padding: '0.5rem', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '8px', color: '#ef4444', cursor: 'pointer' }}><Trash /></button>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button onClick={() => { setNewRisk(r); setShowCreateRisk(true); setShowPreview(false); }} style={{ padding: '0.5rem', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)', borderRadius: '8px', color: '#60a5fa', cursor: 'pointer' }}><Edit /></button>
+                      <button onClick={() => deleteRisk(r.id)} style={{ padding: '0.5rem', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '8px', color: '#ef4444', cursor: 'pointer' }}><Trash /></button>
+                    </div>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
                     <div style={{ padding: '1rem', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)', borderRadius: '8px' }}><div style={{ fontSize: '0.75rem', color: '#60a5fa', marginBottom: '0.25rem' }}>Questions</div><div style={{ fontSize: '2rem', fontWeight: 700 }}>{r.questions.length}</div></div>
