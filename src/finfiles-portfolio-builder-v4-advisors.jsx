@@ -5,9 +5,11 @@ import { UniverseModule } from './UniverseModule';
 import { PortfolioBuilder } from './PortfolioBuilder';
 import GoalPlanningModule from './GoalPlanningModule';
 import DashboardHome from './DashboardHome';
+import AppHeader from './components/AppHeader';
 import { EXTENDED_MOCK_PRODUCTS } from './mockProducts';
 import { ReportGenerator } from './utils/ReportGenerator';
 import { DataExporter } from './utils/DataExporter';
+import { styles, colors } from './styles/sharedStyles';
 
 const MOCK_PRODUCTS = [
   { id: 'MF001', ticker: 'VTSAX', name: 'Vanguard Total Stock Market Index Fund', type: 'Mutual Fund', assetClass: 'Equity', category: 'Large Blend', region: 'US', riskRating: 4, expenseRatio: 0.04, aum: 1250000000000, morningstarRating: 5, ytdReturn: 12.5 },
@@ -269,26 +271,17 @@ function App() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg,#0f172a 0%,#1e293b 100%)', color: '#f1f5f9', fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif' }}>
-      <nav style={{ background: 'rgba(15,23,42,0.95)', borderBottom: '1px solid rgba(148,163,184,0.1)', padding: '1rem 2rem', position: 'sticky', top: 0, zIndex: 100, backdropFilter: 'blur(10px)' }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700, background: 'linear-gradient(135deg,#3b82f6,#8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>FinFiles Portfolio Builder</h1>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            {['home', 'screener', 'universe', 'portfolios', 'risk', 'clients', 'goals', 'users'].map(tab => (
-              <button key={tab} onClick={() => setActiveTab(tab)} style={{ padding: '0.625rem 1.25rem', background: activeTab === tab ? 'rgba(59,130,246,0.2)' : 'transparent', border: activeTab === tab ? '1px solid rgba(59,130,246,0.4)' : '1px solid transparent', borderRadius: '8px', color: activeTab === tab ? '#60a5fa' : '#94a3b8', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem', transition: 'all 0.2s' }}>{tab === 'home' ? '🏠 Home' : tab === 'screener' ? '🔎 Screener' : tab === 'universe' ? '🌐 Universe' : tab === 'portfolios' ? '📊 Model Portfolios' : tab === 'risk' ? '⚖️ Risk Profiles' : tab === 'clients' ? '👨‍💼 Clients' : tab === 'goals' ? '🎯 Goals' : '👥 Users'}</button>
-            ))}
-          </div>
-        </div>
-      </nav>
+    <div style={{ minHeight: '100vh', background: colors.background.primary, color: colors.text.primary, fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif' }}>
+      {activeTab !== 'home' && <AppHeader activeTab={activeTab} onTabChange={setActiveTab} />}
 
-      <main style={{ maxWidth: '1400px', margin: '0 auto', padding: activeTab === 'home' ? '0' : '2rem' }}>
-        {activeTab === 'home' && <DashboardHome />}
+      <main style={{ maxWidth: '1600px', margin: '0 auto', padding: activeTab === 'home' ? '0' : '2rem 3rem' }}>
+        {activeTab === 'home' && <DashboardHome onNavigate={setActiveTab} />}
 
         {activeTab === 'screener' && (
           <div>
             <div style={{ marginBottom: '2rem' }}>
-              <h2 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 700 }}>Product Screener</h2>
-              <p style={{ margin: '0.5rem 0 0', color: '#94a3b8', fontSize: '0.875rem' }}>Search and filter investment products to add to your universe</p>
+              <h2 style={styles.sectionTitle}>Product Screener</h2>
+              <p style={styles.sectionSubtitle}>Search and filter investment products to add to your universe</p>
             </div>
             <ScreenerModule allProducts={allProducts} universeProducts={universeProducts} onAddToUniverse={(products) => {
               products.forEach(product => {
@@ -303,8 +296,8 @@ function App() {
         {activeTab === 'universe' && (
           <div>
             <div style={{ marginBottom: '2rem' }}>
-              <h2 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 700 }}>Product Universe</h2>
-              <p style={{ margin: '0.5rem 0 0', color: '#94a3b8', fontSize: '0.875rem' }}>Manage and organize your investment product universe</p>
+              <h2 style={styles.sectionTitle}>Product Universe</h2>
+              <p style={styles.sectionSubtitle}>Manage and organize your investment product universe</p>
             </div>
             <UniverseModule
               universeProducts={universeProducts}
@@ -323,7 +316,7 @@ function App() {
         {activeTab === 'portfolios' && (
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-              <div><h2 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 700 }}>Model Portfolios</h2><p style={{ margin: '0.5rem 0 0', color: '#94a3b8', fontSize: '0.875rem' }}>Create and manage portfolio templates</p></div>
+              <div><h2 style={styles.sectionTitle}>Model Portfolios</h2><p style={styles.sectionSubtitle}>Create and manage portfolio templates</p></div>
               {!showCreatePortfolio && <button onClick={() => setShowCreatePortfolio(true)} style={s.btn}><PlusCircle />Create Portfolio</button>}
             </div>
 
@@ -331,7 +324,7 @@ function App() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                 <div>
                   <h3 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 700 }}>Risk Level Manager</h3>
-                  <p style={{ margin: '0.5rem 0 0', color: '#94a3b8', fontSize: '0.875rem' }}>Define risk levels for portfolio categorization</p>
+                  <p style={styles.sectionSubtitle}>Define risk levels for portfolio categorization</p>
                 </div>
                 <button onClick={() => setShowManageRiskLevels(!showManageRiskLevels)} style={{ padding: '0.625rem 1rem', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)', borderRadius: '8px', color: '#60a5fa', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500 }}>
                   {showManageRiskLevels ? 'Hide' : 'Manage Risk Levels'}
@@ -437,7 +430,7 @@ function App() {
         {activeTab === 'risk' && (
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-              <div><h2 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 700 }}>Risk Profile Builder</h2><p style={{ margin: '0.5rem 0 0', color: '#94a3b8', fontSize: '0.875rem' }}>Create risk questionnaires and scoring rules</p></div>
+              <div><h2 style={styles.sectionTitle}>Risk Profile Builder</h2><p style={styles.sectionSubtitle}>Create risk questionnaires and scoring rules</p></div>
               {!showCreateRisk && <button onClick={() => setShowCreateRisk(true)} style={s.btn}><PlusCircle />Create Risk Profile</button>}
             </div>
 
@@ -445,7 +438,7 @@ function App() {
               <div style={{ display: 'grid', gap: '1.5rem' }}>{riskProfiles.map(r => (
                 <div key={r.id} style={s.card}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1.5rem' }}>
-                    <div><h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>{r.name}</h3><p style={{ margin: '0.5rem 0 0', color: '#94a3b8', fontSize: '0.875rem' }}>{r.description}</p></div>
+                    <div><h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>{r.name}</h3><p style={styles.sectionSubtitle}>{r.description}</p></div>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                       <button onClick={() => { setNewRisk(r); setShowCreateRisk(true); setShowPreview(false); }} style={{ padding: '0.5rem', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)', borderRadius: '8px', color: '#60a5fa', cursor: 'pointer' }}><Edit /></button>
                       <button onClick={() => deleteRisk(r.id)} style={{ padding: '0.5rem', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '8px', color: '#ef4444', cursor: 'pointer' }}><Trash /></button>
@@ -580,8 +573,8 @@ function App() {
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
               <div>
-                <h2 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 700 }}>User Management</h2>
-                <p style={{ margin: '0.5rem 0 0', color: '#94a3b8', fontSize: '0.875rem' }}>Manage system users and their roles</p>
+                <h2 style={styles.sectionTitle}>User Management</h2>
+                <p style={styles.sectionSubtitle}>Manage system users and their roles</p>
               </div>
               {!showCreateUser && (
                 <button onClick={() => setShowCreateUser(true)} style={s.btn}>

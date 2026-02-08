@@ -8,6 +8,7 @@ import {
   formatCurrency,
   getHealthStatusColor
 } from './utils/GoalCalculations';
+import { styles, colors } from './styles/sharedStyles';
 
 function GoalPlanningModule({ clients, portfolios, riskProfiles }) {
   const [goals, setGoals] = useState([]);

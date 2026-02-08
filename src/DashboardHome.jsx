@@ -4,7 +4,7 @@ const Icon = ({ d, size = 18 }) => <svg width={size} height={size} viewBox="0 0 
 const Search = () => <Icon d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z M21 21l-4.35-4.35" />;
 const ChevronDown = () => <Icon d="M6 9l6 6 6-6" size={16} />;
 
-const DashboardHome = () => {
+const DashboardHome = ({ onNavigate = () => {} }) => {
   const newsItems = [
     {
       id: 1,
@@ -96,11 +96,12 @@ const DashboardHome = () => {
               color: '#fff',
               fontWeight: 600,
               cursor: 'pointer',
-              fontSize: '0.875rem'
+              fontSize: '0.875rem',
+              fontFamily: 'inherit'
             }}>
               Home
             </button>
-            <button style={{
+            <button onClick={() => onNavigate('screener')} style={{
               padding: '0.75rem 1.5rem',
               background: 'transparent',
               border: 'none',
@@ -108,11 +109,13 @@ const DashboardHome = () => {
               color: '#bfdbfe',
               fontWeight: 600,
               cursor: 'pointer',
-              fontSize: '0.875rem'
+              fontSize: '0.875rem',
+              fontFamily: 'inherit',
+              transition: 'all 0.2s'
             }}>
               Research
             </button>
-            <button style={{
+            <button onClick={() => onNavigate('clients')} style={{
               padding: '0.75rem 1.5rem',
               background: 'transparent',
               border: 'none',
@@ -120,7 +123,9 @@ const DashboardHome = () => {
               color: '#bfdbfe',
               fontWeight: 600,
               cursor: 'pointer',
-              fontSize: '0.875rem'
+              fontSize: '0.875rem',
+              fontFamily: 'inherit',
+              transition: 'all 0.2s'
             }}>
               Clients
             </button>

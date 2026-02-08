@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import ProductDetailView from './ProductDetailView';
+import { styles, colors } from './styles/sharedStyles';
 
 const Icon = ({ d, size = 18 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d={d}/></svg>;
 const Search = ({ size = 20 }) => <Icon d="M11 19 A8 8 0 1 1 19 11 A8 8 0 0 1 11 19 M21 21 L16.65 16.65" size={size} />;

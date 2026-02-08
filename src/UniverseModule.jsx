@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import ProductDetailView from './ProductDetailView';
 import UniverseAnalytics from './UniverseAnalytics';
 import { DataExporter } from './utils/DataExporter';
+import { styles as sharedStyles, colors as sharedColors } from './styles/sharedStyles';
 
 const Icon = ({ d, size = 18 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d={d}/></svg>;
 const Trash = () => <Icon d="M3 6 L21 6 M19 6 L19 20 A2 2 0 0 1 17 22 L7 22 A2 2 0 0 1 5 20 L5 6 M8 6 L8 4 A2 2 0 0 1 10 2 L14 2 A2 2 0 0 1 16 4 L16 6" />;

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import ClientOnboardingWizard from './ClientOnboardingWizard';
 import { ReportGenerator } from './utils/ReportGenerator';
 import { DataExporter } from './utils/DataExporter';
+import { styles, colors } from './styles/sharedStyles';
 
 const Icon = ({ d, size = 18 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d={d}/></svg>;
 const PlusCircle = () => <Icon d="M12 2 A10 10 0 1 1 2 12 A10 10 0 0 1 12 2 M12 8 L12 16 M8 12 L16 12" />;
