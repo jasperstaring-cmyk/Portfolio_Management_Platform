@@ -31,6 +31,7 @@ const ToggleRight = () => <Icon d="M1 12 A6 6 0 0 0 7 18 L17 18 A6 6 0 0 0 23 12
 const Shield = () => <Icon d="M12 22 L12 22 C12 22 3 18 3 12 L3 5 L12 2 L21 5 L21 12 C21 18 12 22 12 22 Z" />;
 const FileText = () => <Icon d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8" />;
 const Download = () => <Icon d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M7 10l5 5 5-5 M12 15V3" />;
+const ChevronLeft = () => <Icon d="M15 18 L9 12 L15 6" />;
 
 // Pie Chart
 const PieChart = ({ data }) => {
@@ -404,6 +405,27 @@ function App() {
                           </div>
                         );
                       })()}
+                      <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', paddingTop: '2rem', borderTop: '1px solid rgba(148,163,184,0.2)' }}>
+                        <button
+                          onClick={() => setShowPreview(false)}
+                          style={{
+                            flex: 1,
+                            padding: '0.875rem',
+                            background: 'rgba(148,163,184,0.1)',
+                            border: '1px solid rgba(148,163,184,0.2)',
+                            borderRadius: '8px',
+                            color: '#f1f5f9',
+                            cursor: 'pointer',
+                            fontWeight: 500,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '0.5rem'
+                          }}
+                        >
+                          <ChevronLeft /> Back to Editor
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
