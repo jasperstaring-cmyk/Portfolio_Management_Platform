@@ -9,9 +9,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "jspdf": "^4.1.0",
+    "lucide-react": "latest",
     "react": "^19.2.4",
-    "react-dom": "^19.2.4",
-    "lucide-react": "latest"
+    "react-dom": "^19.2.4"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^5.1.2",

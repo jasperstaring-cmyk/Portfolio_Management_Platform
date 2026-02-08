@@ -4,6 +4,8 @@ import { ScreenerModule } from './ScreenerModule';
 import { UniverseModule } from './UniverseModule';
 import { PortfolioBuilder } from './PortfolioBuilder';
 import { EXTENDED_MOCK_PRODUCTS } from './mockProducts';
+import { ReportGenerator } from './utils/ReportGenerator';
+import { DataExporter } from './utils/DataExporter';
 
 const MOCK_PRODUCTS = [
   { id: 'MF001', ticker: 'VTSAX', name: 'Vanguard Total Stock Market Index Fund', type: 'Mutual Fund', assetClass: 'Equity', category: 'Large Blend', region: 'US', riskRating: 4, expenseRatio: 0.04, aum: 1250000000000, morningstarRating: 5, ytdReturn: 12.5 },
@@ -27,6 +29,8 @@ const UserPlus = () => <Icon d="M16 21 L16 19 A4 4 0 0 0 12 15 L8 15 A4 4 0 0 0 
 const ToggleLeft = () => <Icon d="M1 12 A6 6 0 0 0 7 18 L17 18 A6 6 0 0 0 23 12 A6 6 0 0 0 17 6 L7 6 A6 6 0 0 0 1 12 M7 15 A3 3 0 1 1 7 9 A3 3 0 0 1 7 15" />;
 const ToggleRight = () => <Icon d="M1 12 A6 6 0 0 0 7 18 L17 18 A6 6 0 0 0 23 12 A6 6 0 0 0 17 6 L7 6 A6 6 0 0 0 1 12 M17 15 A3 3 0 1 1 17 9 A3 3 0 0 1 17 15" />;
 const Shield = () => <Icon d="M12 22 L12 22 C12 22 3 18 3 12 L3 5 L12 2 L21 5 L21 12 C21 18 12 22 12 22 Z" />;
+const FileText = () => <Icon d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8" />;
+const Download = () => <Icon d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M7 10l5 5 5-5 M12 15V3" />;
 
 // Pie Chart
 const PieChart = ({ data }) => {
@@ -118,6 +122,12 @@ function App() {
     setNewPortfolio({ name: '', description: '', riskLevel: 'Moderate', holdings: [] });
   };
   const deletePortfolio = (id) => { if (confirm('Delete portfolio?')) setPortfolios(portfolios.filter(p => p.id !== id)); };
+
+  const generatePortfolioReport = (portfolio) => {
+    const reportGen = new ReportGenerator();
+    const doc = reportGen.generatePortfolioReport(portfolio, products);
+    doc.save(`${portfolio.name.replace(/\s+/g, '_')}_Report.pdf`);
+  };
 
   // Risk Profile Functions
   const addQuestion = () => setNewRisk({ ...newRisk, questions: [...newRisk.questions, { id: `Q${newRisk.questions.length + 1}`, text: '', options: [{ text: '', points: 1 }, { text: '', points: 2 }] }] });
@@ -230,10 +240,17 @@ function App() {
               <h2 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 700 }}>Product Universe</h2>
               <p style={{ margin: '0.5rem 0 0', color: '#94a3b8', fontSize: '0.875rem' }}>Manage and organize your investment product universe</p>
             </div>
-            <UniverseModule universeProducts={universeProducts} portfolios={portfolios} onRemoveProduct={(productId) => {
-              setUniverseProducts(universeProducts.filter(p => p.id !== productId));
-              localStorage.removeItem(`product_labels_${productId}`);
-            }} />
+            <UniverseModule
+              universeProducts={universeProducts}
+              portfolios={portfolios}
+              onRemoveProduct={(productId) => {
+                setUniverseProducts(universeProducts.filter(p => p.id !== productId));
+                localStorage.removeItem(`product_labels_${productId}`);
+              }}
+              onAddProducts={(newProducts) => {
+                setUniverseProducts([...universeProducts, ...newProducts]);
+              }}
+            />
           </div>
         )}
 
@@ -249,7 +266,10 @@ function App() {
                 <div key={p.id} style={s.card}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1.5rem' }}>
                     <div style={{ flex: 1 }}><div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}><h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>{p.name}</h3><span style={{ padding: '0.25rem 0.75rem', background: p.riskLevel === 'Conservative' ? 'rgba(16,185,129,0.1)' : p.riskLevel === 'Moderate' ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)', border: `1px solid ${p.riskLevel === 'Conservative' ? 'rgba(16,185,129,0.3)' : p.riskLevel === 'Moderate' ? 'rgba(245,158,11,0.3)' : 'rgba(239,68,68,0.3)'}`, borderRadius: '6px', fontSize: '0.75rem', fontWeight: 600, color: p.riskLevel === 'Conservative' ? '#10b981' : p.riskLevel === 'Moderate' ? '#f59e0b' : '#ef4444' }}>{p.riskLevel}</span></div><p style={{ margin: 0, color: '#94a3b8', fontSize: '0.875rem' }}>{p.description}</p></div>
-                    <button onClick={() => deletePortfolio(p.id)} style={{ padding: '0.5rem', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '8px', color: '#ef4444', cursor: 'pointer' }}><Trash /></button>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button onClick={() => generatePortfolioReport(p)} style={{ padding: '0.5rem 1rem', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)', borderRadius: '8px', color: '#60a5fa', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}><FileText /> Generate Report</button>
+                      <button onClick={() => deletePortfolio(p.id)} style={{ padding: '0.5rem', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '8px', color: '#ef4444', cursor: 'pointer' }}><Trash /></button>
+                    </div>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
                     <div><h4 style={{ margin: '0 0 1rem', fontSize: '0.875rem', fontWeight: 600, color: '#94a3b8' }}>HOLDINGS</h4><div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>{p.holdings.map((h, i) => { const prod = products.find(pr => pr.id === h.productId); return prod ? <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.75rem', background: 'rgba(15,23,42,0.4)', border: '1px solid rgba(148,163,184,0.1)', borderRadius: '8px' }}><div><div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{prod.ticker}</div><div style={{ fontSize: '0.75rem', color: '#64748b' }}>{prod.name}</div></div><div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#3b82f6' }}>{h.weight}%</div></div> : null; })}</div></div>

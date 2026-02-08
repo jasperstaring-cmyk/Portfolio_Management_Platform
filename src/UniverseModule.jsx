@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import ProductDetailView from './ProductDetailView';
 import UniverseAnalytics from './UniverseAnalytics';
+import { DataExporter } from './utils/DataExporter';
 
 const Icon = ({ d, size = 18 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d={d}/></svg>;
 const Trash = () => <Icon d="M3 6 L21 6 M19 6 L19 20 A2 2 0 0 1 17 22 L7 22 A2 2 0 0 1 5 20 L5 6 M8 6 L8 4 A2 2 0 0 1 10 2 L14 2 A2 2 0 0 1 16 4 L16 6" />;
@@ -10,10 +11,12 @@ const Plus = () => <Icon d="M12 5 L12 19 M5 12 L19 12" />;
 const Eye = () => <Icon d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z" />;
 const BarChart = () => <Icon d="M12 20V10 M18 20V4 M6 20v-4" />;
 const Tag = () => <Icon d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82zM7 7h.01" />;
+const Download = () => <Icon d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M7 10l5 5 5-5 M12 15V3" />;
+const Upload = () => <Icon d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M17 8l-5-5-5 5 M12 3v12" />;
 
 const colors = ['#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4', '#ef4444', '#eab308'];
 
-export function UniverseModule({ universeProducts, portfolios, onAddLabels, onRemoveProduct }) {
+export function UniverseModule({ universeProducts, portfolios, onAddLabels, onRemoveProduct, onAddProducts }) {
   const [editingProductId, setEditingProductId] = useState(null);
   const [editLabels, setEditLabels] = useState({ tags: [], assetClass: '', available: true });
   const [showAddModal, setShowAddModal] = useState(false);
@@ -23,6 +26,8 @@ export function UniverseModule({ universeProducts, portfolios, onAddLabels, onRe
   const [bulkTagInput, setBulkTagInput] = useState('');
   const [selectedProductDetail, setSelectedProductDetail] = useState(null);
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [importStatus, setImportStatus] = useState(null);
+  const fileInputRef = useRef(null);
 
   const getProductLabels = (productId) => {
     return JSON.parse(localStorage.getItem(`product_labels_${productId}`) || '{"tags":[],"available":true}');
@@ -112,6 +117,51 @@ export function UniverseModule({ universeProducts, portfolios, onAddLabels, onRe
     setSelectedProducts(new Set());
   };
 
+  const exportUniverse = () => {
+    DataExporter.exportUniverseToCSV(universeProducts);
+  };
+
+  const exportPortfolios = () => {
+    DataExporter.exportPortfoliosToCSV(portfolios, universeProducts);
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const csvText = await DataExporter.readFile(file);
+      const result = DataExporter.importUniverseFromCSV(csvText, universeProducts);
+
+      if (result.products.length > 0 && onAddProducts) {
+        onAddProducts(result.products);
+      }
+
+      setImportStatus({
+        success: true,
+        imported: result.imported,
+        failed: result.failed,
+        errors: result.errors
+      });
+
+      setTimeout(() => setImportStatus(null), 10000);
+
+    } catch (error) {
+      setImportStatus({
+        success: false,
+        error: error.message
+      });
+
+      setTimeout(() => setImportStatus(null), 5000);
+    }
+
+    event.target.value = '';
+  };
+
   const assetClassBreakdown = {};
   universeProducts.forEach(p => {
     assetClassBreakdown[p.assetClass] = (assetClassBreakdown[p.assetClass] || 0) + 1;
@@ -181,13 +231,62 @@ export function UniverseModule({ universeProducts, portfolios, onAddLabels, onRe
           </div>
         </div>
 
-        <button
-          onClick={() => setShowAnalytics(true)}
-          style={{ ...s.btn, marginLeft: '1rem' }}
-        >
-          <BarChart /> Analytics
-        </button>
+        <div style={{ display: 'flex', gap: '0.75rem', marginLeft: '1rem' }}>
+          <button onClick={exportUniverse} style={{ ...s.btn, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', color: '#10b981' }}>
+            <Download /> Export Universe
+          </button>
+          <button onClick={exportPortfolios} style={{ ...s.btn, background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.3)', color: '#a78bfa' }}>
+            <Download /> Export Portfolios
+          </button>
+          <button onClick={handleImportClick} style={{ ...s.btn, background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)', color: '#60a5fa' }}>
+            <Upload /> Import CSV
+          </button>
+          <button onClick={() => setShowAnalytics(true)} style={s.btn}>
+            <BarChart /> Analytics
+          </button>
+        </div>
       </div>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".csv"
+        onChange={handleFileUpload}
+        style={{ display: 'none' }}
+      />
+
+      {importStatus && (
+        <div style={{ ...s.card, marginBottom: '2rem', background: importStatus.success ? 'linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.05))' : 'linear-gradient(135deg, rgba(239,68,68,0.15), rgba(239,68,68,0.05))', border: `1px solid ${importStatus.success ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}` }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+            <div style={{ flex: 1 }}>
+              <h4 style={{ margin: '0 0 0.5rem', fontSize: '1rem', fontWeight: 600, color: importStatus.success ? '#10b981' : '#ef4444' }}>
+                {importStatus.success ? 'Import Successful' : 'Import Failed'}
+              </h4>
+              {importStatus.success ? (
+                <div style={{ fontSize: '0.875rem', color: '#94a3b8' }}>
+                  <p style={{ margin: '0.25rem 0' }}>Imported: {importStatus.imported} products</p>
+                  {importStatus.failed > 0 && <p style={{ margin: '0.25rem 0', color: '#f59e0b' }}>Failed: {importStatus.failed} products</p>}
+                  {importStatus.errors.length > 0 && (
+                    <details style={{ marginTop: '0.5rem' }}>
+                      <summary style={{ cursor: 'pointer', color: '#f59e0b' }}>View Errors</summary>
+                      <ul style={{ marginTop: '0.5rem', paddingLeft: '1.5rem' }}>
+                        {importStatus.errors.map((err, i) => (
+                          <li key={i} style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{err}</li>
+                        ))}
+                      </ul>
+                    </details>
+                  )}
+                </div>
+              ) : (
+                <p style={{ margin: 0, fontSize: '0.875rem', color: '#94a3b8' }}>{importStatus.error}</p>
+              )}
+            </div>
+            <button onClick={() => setImportStatus(null)} style={{ padding: '0.5rem', background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
+              <X />
+            </button>
+          </div>
+        </div>
+      )}
 
       {selectedProducts.size > 0 && (
         <div style={{ ...s.card, marginBottom: '2rem', background: 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(59,130,246,0.15))' }}>

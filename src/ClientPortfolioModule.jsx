@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import ClientOnboardingWizard from './ClientOnboardingWizard';
+import { ReportGenerator } from './utils/ReportGenerator';
+import { DataExporter } from './utils/DataExporter';
 
 const Icon = ({ d, size = 18 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d={d}/></svg>;
 const PlusCircle = () => <Icon d="M12 2 A10 10 0 1 1 2 12 A10 10 0 0 1 12 2 M12 8 L12 16 M8 12 L16 12" />;
@@ -10,6 +12,8 @@ const Target = () => <Icon d="M12 22 A10 10 0 1 1 22 12 A10 10 0 0 1 12 22 M12 1
 const Eye = () => <Icon d="M1 12 C1 12 5 4 12 4 C19 4 23 12 23 12 C23 12 19 20 12 20 C5 20 1 12 1 12 M12 15 A3 3 0 1 1 12 9 A3 3 0 0 1 12 15" />;
 const Layers = () => <Icon d="M12 2 L2 7 L12 12 L22 7 L12 2 M2 17 L12 22 L22 17 M2 12 L12 17 L22 12" />;
 const ArrowLeft = () => <Icon d="M19 12 L5 12 M12 19 L5 12 L12 5" />;
+const FileText = () => <Icon d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8" />;
+const Download = () => <Icon d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M7 10l5 5 5-5 M12 15V3" />;
 
 const PieChart = ({ data, size = 200 }) => {
   const center = size / 2, radius = size / 2 - 10;
@@ -194,6 +198,20 @@ export function ClientPortfolioModule({ products, portfolios }) {
     setSelectedClient({ ...selectedClient, goals: selectedClient.goals.filter(g => g.id !== goalId) });
   };
 
+  const generateClientReport = (client) => {
+    const reportGen = new ReportGenerator();
+    const doc = reportGen.generateClientReport(client, portfolios, products, client.goals || []);
+    doc.save(`${client.name.replace(/\s+/g, '_')}_Proposal.pdf`);
+  };
+
+  const exportClientsData = () => {
+    DataExporter.exportClientsToCSV(clients);
+  };
+
+  const exportClientGoals = () => {
+    DataExporter.exportClientGoalsToCSV(clients, portfolios);
+  };
+
   return (
     <div>
       {!selectedClient ? (
@@ -203,9 +221,17 @@ export function ClientPortfolioModule({ products, portfolios }) {
               <h2 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 700 }}>Client Portfolio Management</h2>
               <p style={{ margin: '0.5rem 0 0', color: '#94a3b8', fontSize: '0.875rem' }}>Onboard clients and build goal-based portfolios</p>
             </div>
-            <button onClick={() => setShowWizard(true)} style={s.btn}>
-              <UserPlus />Onboard Client
-            </button>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button onClick={exportClientsData} style={{ ...s.btn, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', color: '#10b981' }}>
+                <Download /> Export Clients
+              </button>
+              <button onClick={exportClientGoals} style={{ ...s.btn, background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.3)', color: '#a78bfa' }}>
+                <Download /> Export Goals
+              </button>
+              <button onClick={() => setShowWizard(true)} style={s.btn}>
+                <UserPlus />Onboard Client
+              </button>
+            </div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '2rem' }}>
@@ -261,6 +287,7 @@ export function ClientPortfolioModule({ products, portfolios }) {
           <div style={s.card}>
             <h2>{selectedClient.name}</h2>
             <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+               <button onClick={() => generateClientReport(selectedClient)} style={{ ...s.btn, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', color: '#10b981' }}><FileText />Generate Proposal</button>
                <button onClick={() => setShowConsolidatedView(!showConsolidatedView)} style={s.btn}><Layers />Consolidated View</button>
                <button onClick={() => setShowAddGoal(true)} style={s.btn}><PlusCircle />Add Goal</button>
             </div>
