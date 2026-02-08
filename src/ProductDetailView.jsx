@@ -1,5 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { X, TrendingUp, DollarSign, AlertTriangle, BarChart3, PieChart } from 'lucide-react';
+
+const Icon = ({ d, size = 18 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d={d}/></svg>;
+const X = () => <Icon d="M18 6 L6 18 M6 6 L18 18" size={24} />;
+const TrendingUp = () => <Icon d="M23 6l-9.5 9.5-5-5L1 18 M17 6h6v6" size={20} />;
+const DollarSign = () => <Icon d="M12 1v22 M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" size={20} />;
+const AlertTriangle = () => <Icon d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z M12 9v4 M12 17h.01" size={20} />;
+const BarChart3 = () => <Icon d="M12 20V10 M18 20V4 M6 20v-4" size={20} />;
+const PieChart = () => <Icon d="M21.21 15.89A10 10 0 1 1 8 2.83 M22 12A10 10 0 0 0 12 2v10z" size={20} />;
 
 const generateHistoricalData = (ytdReturn) => {
   const baseReturn = ytdReturn / 12;
@@ -86,8 +93,10 @@ const getCategoryAverages = (product) => {
     'Mid-Cap Blend': { return: 10.8, expenseRatio: 0.11, risk: 5, morningstar: 4 },
     'Small Blend': { return: 9.0, expenseRatio: 0.13, risk: 5, morningstar: 4 },
     'Foreign Large Blend': { return: 10.5, expenseRatio: 0.15, risk: 4, morningstar: 3 },
+    'Foreign Large Growth': { return: 18.3, expenseRatio: 0.85, risk: 5, morningstar: 4 },
     'Diversified Emerging Mkts': { return: 7.8, expenseRatio: 0.25, risk: 5, morningstar: 3 },
-    'Intermediate Core Bond': { return: 0.2, expenseRatio: 0.06, risk: 2, morningstar: 4 },
+    'Intermediate Core Bond': { return: -1.2, expenseRatio: 0.06, risk: 2, morningstar: 4 },
+    'Multisector Bond': { return: 5.8, expenseRatio: 0.65, risk: 3, morningstar: 5 },
     'Short-term Bond': { return: 4.5, expenseRatio: 0.08, risk: 1, morningstar: 3 },
     'High Yield Bond': { return: 6.3, expenseRatio: 0.45, risk: 4, morningstar: 3 },
     'Real Estate': { return: 3.8, expenseRatio: 0.15, risk: 4, morningstar: 4 },
@@ -109,94 +118,146 @@ export default function ProductDetailView({ product, onClose }) {
   const range = maxValue - minValue;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="bg-gradient-to-r from-slate-900 to-slate-700 text-white p-6 flex justify-between items-start">
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-2">
-              <span className="text-3xl font-bold">{product.ticker}</span>
-              <span className="px-3 py-1 bg-white/20 rounded-full text-sm">{product.type}</span>
+    <div style={{
+      position: 'fixed',
+      inset: 0,
+      background: 'rgba(0,0,0,0.6)',
+      backdropFilter: 'blur(8px)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000,
+      padding: '1rem'
+    }}>
+      <div style={{
+        background: '#fff',
+        borderRadius: '16px',
+        boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+        maxWidth: '1200px',
+        width: '100%',
+        maxHeight: '90vh',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column'
+      }}>
+        <div style={{
+          background: 'linear-gradient(to right, #0f172a, #334155)',
+          color: '#fff',
+          padding: '1.5rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'start'
+        }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+              <span style={{ fontSize: '2rem', fontWeight: 700 }}>{product.ticker}</span>
+              <span style={{
+                padding: '0.25rem 0.75rem',
+                background: 'rgba(255,255,255,0.2)',
+                borderRadius: '9999px',
+                fontSize: '0.875rem'
+              }}>{product.type}</span>
             </div>
-            <h2 className="text-xl font-medium mb-1">{product.name}</h2>
-            <div className="flex items-center gap-4 text-sm text-slate-300">
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 500, marginBottom: '0.5rem', margin: 0 }}>{product.name}</h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', fontSize: '0.875rem', color: '#cbd5e1' }}>
               <span>{product.category}</span>
               <span>•</span>
               <span>{product.region}</span>
               <span>•</span>
-              <span className="flex items-center gap-1">
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                 {'★'.repeat(product.morningstarRating)}{'☆'.repeat(5 - product.morningstarRating)}
               </span>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+            style={{
+              padding: '0.5rem',
+              background: 'rgba(255,255,255,0.1)',
+              border: 'none',
+              borderRadius: '8px',
+              color: '#fff',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
           >
-            <X className="w-6 h-6" />
+            <X />
           </button>
         </div>
 
-        <div className="border-b border-slate-200">
-          <div className="flex gap-1 px-6">
+        <div style={{ borderBottom: '1px solid #e2e8f0' }}>
+          <div style={{ display: 'flex', gap: '0.25rem', padding: '0 1.5rem' }}>
             {[
-              { id: 'overview', label: 'Overview', icon: BarChart3 },
-              { id: 'performance', label: 'Performance', icon: TrendingUp },
-              { id: 'holdings', label: 'Holdings', icon: PieChart },
-              { id: 'fees', label: 'Fees & Costs', icon: DollarSign },
-              { id: 'risk', label: 'Risk Metrics', icon: AlertTriangle },
+              { id: 'overview', label: 'Overview', Icon: BarChart3 },
+              { id: 'performance', label: 'Performance', Icon: TrendingUp },
+              { id: 'holdings', label: 'Holdings', Icon: PieChart },
+              { id: 'fees', label: 'Fees & Costs', Icon: DollarSign },
+              { id: 'risk', label: 'Risk Metrics', Icon: AlertTriangle },
             ].map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-4 py-3 font-medium border-b-2 transition-colors flex items-center gap-2 ${
-                  activeTab === tab.id
-                    ? 'border-slate-900 text-slate-900'
-                    : 'border-transparent text-slate-500 hover:text-slate-700'
-                }`}
+                style={{
+                  padding: '0.75rem 1rem',
+                  fontWeight: 500,
+                  borderBottom: activeTab === tab.id ? '2px solid #0f172a' : '2px solid transparent',
+                  borderLeft: 'none',
+                  borderRight: 'none',
+                  borderTop: 'none',
+                  color: activeTab === tab.id ? '#0f172a' : '#64748b',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  background: 'none',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem'
+                }}
               >
-                <tab.icon className="w-4 h-4" />
+                <tab.Icon />
                 {tab.label}
               </button>
             ))}
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6">
+        <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }}>
           {activeTab === 'overview' && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-4 gap-4">
-                <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600 mb-1">YTD Return</div>
-                  <div className={`text-2xl font-bold ${product.ytdReturn >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+                <div style={{ background: '#f8fafc', borderRadius: '8px', padding: '1rem' }}>
+                  <div style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '0.25rem' }}>YTD Return</div>
+                  <div style={{ fontSize: '1.75rem', fontWeight: 700, color: product.ytdReturn >= 0 ? '#16a34a' : '#dc2626' }}>
                     {product.ytdReturn >= 0 ? '+' : ''}{product.ytdReturn.toFixed(2)}%
                   </div>
-                  <div className="text-xs text-slate-500 mt-1">vs {categoryAvg.return.toFixed(2)}% avg</div>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem' }}>vs {categoryAvg.return.toFixed(2)}% avg</div>
                 </div>
 
-                <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600 mb-1">Expense Ratio</div>
-                  <div className="text-2xl font-bold text-slate-900">{product.expenseRatio.toFixed(2)}%</div>
-                  <div className="text-xs text-slate-500 mt-1">vs {categoryAvg.expenseRatio.toFixed(2)}% avg</div>
+                <div style={{ background: '#f8fafc', borderRadius: '8px', padding: '1rem' }}>
+                  <div style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '0.25rem' }}>Expense Ratio</div>
+                  <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#0f172a' }}>{product.expenseRatio.toFixed(2)}%</div>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem' }}>vs {categoryAvg.expenseRatio.toFixed(2)}% avg</div>
                 </div>
 
-                <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600 mb-1">Total AUM</div>
-                  <div className="text-2xl font-bold text-slate-900">
+                <div style={{ background: '#f8fafc', borderRadius: '8px', padding: '1rem' }}>
+                  <div style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '0.25rem' }}>Total AUM</div>
+                  <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#0f172a' }}>
                     ${(product.aum / 1000000000).toFixed(1)}B
                   </div>
-                  <div className="text-xs text-slate-500 mt-1">Assets under mgmt</div>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem' }}>Assets under mgmt</div>
                 </div>
 
-                <div className="bg-slate-50 rounded-lg p-4">
-                  <div className="text-sm text-slate-600 mb-1">Risk Rating</div>
-                  <div className="text-2xl font-bold text-slate-900">{product.riskRating}/5</div>
-                  <div className="text-xs text-slate-500 mt-1">vs {categoryAvg.risk}/5 avg</div>
+                <div style={{ background: '#f8fafc', borderRadius: '8px', padding: '1rem' }}>
+                  <div style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '0.25rem' }}>Risk Rating</div>
+                  <div style={{ fontSize: '1.75rem', fontWeight: 700, color: '#0f172a' }}>{product.riskRating}/5</div>
+                  <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem' }}>vs {categoryAvg.risk}/5 avg</div>
                 </div>
               </div>
 
-              <div>
-                <h3 className="font-semibold text-lg mb-3">Fund Description</h3>
-                <p className="text-slate-700 leading-relaxed">
+              <div style={{ marginBottom: '1.5rem' }}>
+                <h3 style={{ fontWeight: 600, fontSize: '1.125rem', marginBottom: '0.75rem' }}>Fund Description</h3>
+                <p style={{ color: '#334155', lineHeight: 1.6 }}>
                   {product.name} is a {product.type.toLowerCase()} that tracks the performance of {product.category.toLowerCase()}
                   securities in the {product.region.toLowerCase()} market. This fund provides investors with diversified exposure to
                   {product.assetClass === 'Fixed Income' ? ' fixed income securities' : ' equity markets'} and is suitable for
@@ -204,51 +265,16 @@ export default function ProductDetailView({ product, onClose }) {
                   seeking {product.assetClass === 'Fixed Income' ? 'income generation and capital preservation' : 'long-term capital appreciation'}.
                 </p>
               </div>
-
-              <div>
-                <h3 className="font-semibold text-lg mb-3">Category Comparison</h3>
-                <div className="space-y-3">
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-slate-600">Return vs Category</span>
-                      <span className={product.ytdReturn > categoryAvg.return ? 'text-green-600' : 'text-red-600'}>
-                        {product.ytdReturn > categoryAvg.return ? '+' : ''}{(product.ytdReturn - categoryAvg.return).toFixed(2)}%
-                      </span>
-                    </div>
-                    <div className="bg-slate-100 rounded-full h-2 overflow-hidden">
-                      <div
-                        className={`h-full ${product.ytdReturn > categoryAvg.return ? 'bg-green-500' : 'bg-red-500'}`}
-                        style={{ width: `${Math.min(100, Math.abs((product.ytdReturn - categoryAvg.return) / categoryAvg.return * 100))}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-slate-600">Cost vs Category</span>
-                      <span className={product.expenseRatio < categoryAvg.expenseRatio ? 'text-green-600' : 'text-red-600'}>
-                        {product.expenseRatio < categoryAvg.expenseRatio ? '-' : '+'}{Math.abs(product.expenseRatio - categoryAvg.expenseRatio).toFixed(3)}%
-                      </span>
-                    </div>
-                    <div className="bg-slate-100 rounded-full h-2 overflow-hidden">
-                      <div
-                        className={`h-full ${product.expenseRatio < categoryAvg.expenseRatio ? 'bg-green-500' : 'bg-red-500'}`}
-                        style={{ width: `${Math.min(100, Math.abs((product.expenseRatio - categoryAvg.expenseRatio) / categoryAvg.expenseRatio * 100) * 2)}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
           )}
 
           {activeTab === 'performance' && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="font-semibold text-lg mb-4">3-Year Historical Performance</h3>
-                <div className="bg-slate-50 rounded-lg p-6">
-                  <div className="relative h-64">
-                    <svg className="w-full h-full">
+            <div>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <h3 style={{ fontWeight: 600, fontSize: '1.125rem', marginBottom: '1rem' }}>3-Year Historical Performance</h3>
+                <div style={{ background: '#f8fafc', borderRadius: '8px', padding: '1.5rem' }}>
+                  <div style={{ position: 'relative', height: '16rem' }}>
+                    <svg style={{ width: '100%', height: '100%' }}>
                       <polyline
                         points={historicalData.map((d, i) =>
                           `${(i / (historicalData.length - 1)) * 100}%,${100 - ((d.value - minValue) / range) * 100}%`
@@ -258,20 +284,11 @@ export default function ProductDetailView({ product, onClose }) {
                         strokeWidth="2"
                         vectorEffect="non-scaling-stroke"
                       />
-
                       <line x1="0" y1="0" x2="0" y2="100%" stroke="rgb(203, 213, 225)" strokeWidth="1" />
                       <line x1="0" y1="100%" x2="100%" y2="100%" stroke="rgb(203, 213, 225)" strokeWidth="1" />
                     </svg>
-
-                    <div className="absolute -left-12 top-0 text-xs text-slate-500">
-                      ${maxValue.toFixed(0)}
-                    </div>
-                    <div className="absolute -left-12 bottom-0 text-xs text-slate-500">
-                      ${minValue.toFixed(0)}
-                    </div>
                   </div>
-
-                  <div className="flex justify-between mt-4 text-xs text-slate-500">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem', fontSize: '0.75rem', color: '#64748b' }}>
                     <span>{historicalData[0].date}</span>
                     <span>{historicalData[Math.floor(historicalData.length / 2)].date}</span>
                     <span>{historicalData[historicalData.length - 1].date}</span>
@@ -280,140 +297,103 @@ export default function ProductDetailView({ product, onClose }) {
               </div>
 
               <div>
-                <h3 className="font-semibold text-lg mb-4">Returns by Period</h3>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="bg-slate-50 rounded-lg p-4">
-                    <div className="text-sm text-slate-600 mb-1">1 Year</div>
-                    <div className={`text-xl font-bold ${product.ytdReturn >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {product.ytdReturn >= 0 ? '+' : ''}{(product.ytdReturn * 0.9).toFixed(2)}%
+                <h3 style={{ fontWeight: 600, fontSize: '1.125rem', marginBottom: '1rem' }}>Returns by Period</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+                  {[
+                    { label: '1 Year', value: product.ytdReturn * 0.9 },
+                    { label: '3 Year', value: product.ytdReturn * 0.7 },
+                    { label: '5 Year', value: product.ytdReturn * 0.6 }
+                  ].map((period, idx) => (
+                    <div key={idx} style={{ background: '#f8fafc', borderRadius: '8px', padding: '1rem' }}>
+                      <div style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '0.25rem' }}>{period.label}</div>
+                      <div style={{ fontSize: '1.5rem', fontWeight: 700, color: period.value >= 0 ? '#16a34a' : '#dc2626' }}>
+                        {period.value >= 0 ? '+' : ''}{period.value.toFixed(2)}%
+                      </div>
                     </div>
-                  </div>
-                  <div className="bg-slate-50 rounded-lg p-4">
-                    <div className="text-sm text-slate-600 mb-1">3 Year</div>
-                    <div className={`text-xl font-bold ${product.ytdReturn >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {product.ytdReturn >= 0 ? '+' : ''}{(product.ytdReturn * 0.7).toFixed(2)}%
-                    </div>
-                  </div>
-                  <div className="bg-slate-50 rounded-lg p-4">
-                    <div className="text-sm text-slate-600 mb-1">5 Year</div>
-                    <div className={`text-xl font-bold ${product.ytdReturn >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {product.ytdReturn >= 0 ? '+' : ''}{(product.ytdReturn * 0.6).toFixed(2)}%
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
             </div>
           )}
 
           {activeTab === 'holdings' && (
-            <div className="space-y-6">
-              <div>
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-semibold text-lg">Top 10 Holdings</h3>
-                  <span className="text-sm text-slate-600">
-                    Total: {holdings.reduce((sum, h) => sum + h.percentage, 0).toFixed(1)}%
-                  </span>
-                </div>
-
-                <div className="space-y-2">
-                  {holdings.map((holding, idx) => (
-                    <div key={idx} className="flex items-center gap-4 p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors">
-                      <div className="w-8 text-center text-sm font-semibold text-slate-500">
-                        {idx + 1}
-                      </div>
-                      <div className="flex-1">
-                        <div className="font-medium text-slate-900">{holding.name}</div>
-                        <div className="text-sm text-slate-600">{holding.ticker}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-semibold text-slate-900">{holding.percentage.toFixed(2)}%</div>
-                        <div className="text-sm text-slate-600">
-                          ${(holding.value / 1000000).toFixed(1)}M
-                        </div>
-                      </div>
-                      <div className="w-32">
-                        <div className="bg-slate-200 rounded-full h-2 overflow-hidden">
-                          <div
-                            className="bg-blue-500 h-full"
-                            style={{ width: `${(holding.percentage / holdings[0].percentage) * 100}%` }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h3 style={{ fontWeight: 600, fontSize: '1.125rem', margin: 0 }}>Top 10 Holdings</h3>
+                <span style={{ fontSize: '0.875rem', color: '#64748b' }}>
+                  Total: {holdings.reduce((sum, h) => sum + h.percentage, 0).toFixed(1)}%
+                </span>
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="text-sm text-blue-900">
-                  <strong>Note:</strong> Holdings data is as of the most recent reporting period and may change daily.
-                  The remaining {(100 - holdings.reduce((sum, h) => sum + h.percentage, 0)).toFixed(1)}% consists of other
-                  securities, cash equivalents, and derivatives.
-                </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {holdings.map((holding, idx) => (
+                  <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.75rem', background: '#f8fafc', borderRadius: '8px' }}>
+                    <div style={{ width: '2rem', textAlign: 'center', fontSize: '0.875rem', fontWeight: 600, color: '#64748b' }}>
+                      {idx + 1}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 500, color: '#0f172a' }}>{holding.name}</div>
+                      <div style={{ fontSize: '0.875rem', color: '#64748b' }}>{holding.ticker}</div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontWeight: 600, color: '#0f172a' }}>{holding.percentage.toFixed(2)}%</div>
+                      <div style={{ fontSize: '0.875rem', color: '#64748b' }}>
+                        ${(holding.value / 1000000).toFixed(1)}M
+                      </div>
+                    </div>
+                    <div style={{ width: '8rem' }}>
+                      <div style={{ background: '#cbd5e1', borderRadius: '9999px', height: '0.5rem', overflow: 'hidden' }}>
+                        <div
+                          style={{
+                            background: '#3b82f6',
+                            height: '100%',
+                            width: `${(holding.percentage / holdings[0].percentage) * 100}%`
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
 
           {activeTab === 'fees' && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="font-semibold text-lg mb-4">Fee Structure</h3>
-                <div className="bg-slate-50 rounded-lg p-6">
-                  <div className="grid grid-cols-2 gap-6">
+            <div>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <h3 style={{ fontWeight: 600, fontSize: '1.125rem', marginBottom: '1rem' }}>Fee Structure</h3>
+                <div style={{ background: '#f8fafc', borderRadius: '8px', padding: '1.5rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem' }}>
                     <div>
-                      <div className="text-sm text-slate-600 mb-2">Expense Ratio</div>
-                      <div className="text-3xl font-bold text-slate-900">{product.expenseRatio.toFixed(3)}%</div>
-                      <div className="text-sm text-slate-500 mt-1">Annual operating expenses</div>
+                      <div style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '0.5rem' }}>Expense Ratio</div>
+                      <div style={{ fontSize: '2.5rem', fontWeight: 700, color: '#0f172a' }}>{product.expenseRatio.toFixed(3)}%</div>
+                      <div style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '0.25rem' }}>Annual operating expenses</div>
                     </div>
 
                     <div>
-                      <div className="text-sm text-slate-600 mb-2">Category Average</div>
-                      <div className="text-3xl font-bold text-slate-500">{categoryAvg.expenseRatio.toFixed(3)}%</div>
-                      <div className="text-sm text-slate-500 mt-1">{product.category} average</div>
+                      <div style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '0.5rem' }}>Category Average</div>
+                      <div style={{ fontSize: '2.5rem', fontWeight: 700, color: '#64748b' }}>{categoryAvg.expenseRatio.toFixed(3)}%</div>
+                      <div style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '0.25rem' }}>{product.category} average</div>
                     </div>
                   </div>
                 </div>
               </div>
 
               <div>
-                <h3 className="font-semibold text-lg mb-4">Cost Breakdown</h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between p-3 bg-slate-50 rounded-lg">
-                    <span className="text-slate-700">Management Fee</span>
-                    <span className="font-semibold">{(product.expenseRatio * 0.85).toFixed(3)}%</span>
-                  </div>
-                  <div className="flex justify-between p-3 bg-slate-50 rounded-lg">
-                    <span className="text-slate-700">Administrative Costs</span>
-                    <span className="font-semibold">{(product.expenseRatio * 0.10).toFixed(3)}%</span>
-                  </div>
-                  <div className="flex justify-between p-3 bg-slate-50 rounded-lg">
-                    <span className="text-slate-700">Other Expenses</span>
-                    <span className="font-semibold">{(product.expenseRatio * 0.05).toFixed(3)}%</span>
-                  </div>
-                  <div className="flex justify-between p-3 bg-slate-100 rounded-lg border-2 border-slate-300">
-                    <span className="text-slate-900 font-semibold">Total Annual Fee</span>
-                    <span className="font-bold">{product.expenseRatio.toFixed(3)}%</span>
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="font-semibold text-lg mb-4">Fee Impact Calculator</h3>
-                <div className="bg-gradient-to-br from-slate-900 to-slate-700 text-white rounded-lg p-6">
-                  <div className="text-sm mb-4">On a $10,000 investment</div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <div className="text-slate-300 text-xs mb-1">1 Year</div>
-                      <div className="text-xl font-bold">${(10000 * product.expenseRatio / 100).toFixed(0)}</div>
-                    </div>
-                    <div>
-                      <div className="text-slate-300 text-xs mb-1">5 Years</div>
-                      <div className="text-xl font-bold">${(10000 * product.expenseRatio / 100 * 5).toFixed(0)}</div>
-                    </div>
-                    <div>
-                      <div className="text-slate-300 text-xs mb-1">10 Years</div>
-                      <div className="text-xl font-bold">${(10000 * product.expenseRatio / 100 * 10).toFixed(0)}</div>
-                    </div>
+                <h3 style={{ fontWeight: 600, fontSize: '1.125rem', marginBottom: '1rem' }}>Fee Impact Calculator</h3>
+                <div style={{ background: 'linear-gradient(to bottom right, #0f172a, #334155)', color: '#fff', borderRadius: '8px', padding: '1.5rem' }}>
+                  <div style={{ fontSize: '0.875rem', marginBottom: '1rem' }}>On a $10,000 investment</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+                    {[
+                      { label: '1 Year', value: 10000 * product.expenseRatio / 100 },
+                      { label: '5 Years', value: 10000 * product.expenseRatio / 100 * 5 },
+                      { label: '10 Years', value: 10000 * product.expenseRatio / 100 * 10 }
+                    ].map((period, idx) => (
+                      <div key={idx}>
+                        <div style={{ color: '#cbd5e1', fontSize: '0.75rem', marginBottom: '0.25rem' }}>{period.label}</div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>${period.value.toFixed(0)}</div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -421,60 +401,37 @@ export default function ProductDetailView({ product, onClose }) {
           )}
 
           {activeTab === 'risk' && (
-            <div className="space-y-6">
-              <div>
-                <h3 className="font-semibold text-lg mb-4">Risk Metrics</h3>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="bg-slate-50 rounded-lg p-4">
-                    <div className="text-sm text-slate-600 mb-1">Volatility (σ)</div>
-                    <div className="text-2xl font-bold text-slate-900">{riskMetrics.volatility}%</div>
-                    <div className="text-xs text-slate-500 mt-1">Standard deviation</div>
-                  </div>
-
-                  <div className="bg-slate-50 rounded-lg p-4">
-                    <div className="text-sm text-slate-600 mb-1">Sharpe Ratio</div>
-                    <div className="text-2xl font-bold text-slate-900">{riskMetrics.sharpeRatio}</div>
-                    <div className="text-xs text-slate-500 mt-1">Risk-adjusted return</div>
-                  </div>
-
-                  <div className="bg-slate-50 rounded-lg p-4">
-                    <div className="text-sm text-slate-600 mb-1">Beta (β)</div>
-                    <div className="text-2xl font-bold text-slate-900">{riskMetrics.beta}</div>
-                    <div className="text-xs text-slate-500 mt-1">Market sensitivity</div>
-                  </div>
-
-                  <div className="bg-slate-50 rounded-lg p-4">
-                    <div className="text-sm text-slate-600 mb-1">Max Drawdown</div>
-                    <div className="text-2xl font-bold text-red-600">{riskMetrics.maxDrawdown}%</div>
-                    <div className="text-xs text-slate-500 mt-1">Peak to trough</div>
-                  </div>
-
-                  <div className="bg-slate-50 rounded-lg p-4">
-                    <div className="text-sm text-slate-600 mb-1">Alpha (α)</div>
-                    <div className={`text-2xl font-bold ${parseFloat(riskMetrics.alpha) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {parseFloat(riskMetrics.alpha) >= 0 ? '+' : ''}{riskMetrics.alpha}%
+            <div>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <h3 style={{ fontWeight: 600, fontSize: '1.125rem', marginBottom: '1rem' }}>Risk Metrics</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
+                  {[
+                    { label: 'Volatility (σ)', value: `${riskMetrics.volatility}%`, sub: 'Standard deviation' },
+                    { label: 'Sharpe Ratio', value: riskMetrics.sharpeRatio, sub: 'Risk-adjusted return' },
+                    { label: 'Beta (β)', value: riskMetrics.beta, sub: 'Market sensitivity' },
+                    { label: 'Max Drawdown', value: `${riskMetrics.maxDrawdown}%`, sub: 'Peak to trough', color: '#dc2626' },
+                    { label: 'Alpha (α)', value: `${parseFloat(riskMetrics.alpha) >= 0 ? '+' : ''}${riskMetrics.alpha}%`, sub: 'Excess return', color: parseFloat(riskMetrics.alpha) >= 0 ? '#16a34a' : '#dc2626' },
+                    { label: 'R-Squared', value: `${riskMetrics.rSquared}%`, sub: 'Correlation to index' }
+                  ].map((metric, idx) => (
+                    <div key={idx} style={{ background: '#f8fafc', borderRadius: '8px', padding: '1rem' }}>
+                      <div style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '0.25rem' }}>{metric.label}</div>
+                      <div style={{ fontSize: '1.75rem', fontWeight: 700, color: metric.color || '#0f172a' }}>{metric.value}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem' }}>{metric.sub}</div>
                     </div>
-                    <div className="text-xs text-slate-500 mt-1">Excess return</div>
-                  </div>
-
-                  <div className="bg-slate-50 rounded-lg p-4">
-                    <div className="text-sm text-slate-600 mb-1">R-Squared</div>
-                    <div className="text-2xl font-bold text-slate-900">{riskMetrics.rSquared}%</div>
-                    <div className="text-xs text-slate-500 mt-1">Correlation to index</div>
-                  </div>
+                  ))}
                 </div>
               </div>
 
-              <div>
-                <h3 className="font-semibold text-lg mb-4">Risk Assessment</h3>
-                <div className="bg-slate-50 rounded-lg p-6">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="text-5xl font-bold text-slate-900">{product.riskRating}</div>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <h3 style={{ fontWeight: 600, fontSize: '1.125rem', marginBottom: '1rem' }}>Risk Assessment</h3>
+                <div style={{ background: '#f8fafc', borderRadius: '8px', padding: '1.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+                    <div style={{ fontSize: '3.5rem', fontWeight: 700, color: '#0f172a' }}>{product.riskRating}</div>
                     <div>
-                      <div className="font-semibold text-lg">
+                      <div style={{ fontWeight: 600, fontSize: '1.125rem' }}>
                         {product.riskRating <= 2 ? 'Low Risk' : product.riskRating === 3 ? 'Moderate Risk' : product.riskRating === 4 ? 'Above Average Risk' : 'High Risk'}
                       </div>
-                      <div className="text-sm text-slate-600">
+                      <div style={{ fontSize: '0.875rem', color: '#64748b' }}>
                         {product.riskRating <= 2
                           ? 'Suitable for conservative investors seeking capital preservation'
                           : product.riskRating === 3
@@ -486,33 +443,32 @@ export default function ProductDetailView({ product, onClose }) {
                     </div>
                   </div>
 
-                  <div className="flex gap-1">
+                  <div style={{ display: 'flex', gap: '0.25rem' }}>
                     {[1, 2, 3, 4, 5].map(level => (
                       <div
                         key={level}
-                        className={`flex-1 h-3 rounded ${
-                          level <= product.riskRating
-                            ? level <= 2
-                              ? 'bg-green-500'
-                              : level === 3
-                              ? 'bg-yellow-500'
-                              : 'bg-red-500'
-                            : 'bg-slate-200'
-                        }`}
+                        style={{
+                          flex: 1,
+                          height: '0.75rem',
+                          borderRadius: '4px',
+                          background: level <= product.riskRating
+                            ? (level <= 2 ? '#10b981' : level === 3 ? '#eab308' : '#ef4444')
+                            : '#cbd5e1'
+                        }}
                       />
                     ))}
                   </div>
                 </div>
               </div>
 
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                <div className="flex gap-3">
-                  <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                  <div className="text-sm text-amber-900">
-                    <strong>Risk Disclosure:</strong> All investments involve risk, including possible loss of principal.
-                    Past performance does not guarantee future results. Consider your investment objectives, risks, charges,
-                    and expenses carefully before investing.
-                  </div>
+              <div style={{ background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: '8px', padding: '1rem', display: 'flex', gap: '0.75rem' }}>
+                <div style={{ flexShrink: 0, marginTop: '0.125rem' }}>
+                  <AlertTriangle />
+                </div>
+                <div style={{ fontSize: '0.875rem', color: '#78350f' }}>
+                  <strong>Risk Disclosure:</strong> All investments involve risk, including possible loss of principal.
+                  Past performance does not guarantee future results. Consider your investment objectives, risks, charges,
+                  and expenses carefully before investing.
                 </div>
               </div>
             </div>
