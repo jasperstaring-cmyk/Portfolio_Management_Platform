@@ -3,6 +3,7 @@ import { ClientPortfolioModule } from './ClientPortfolioModule';
 import { ScreenerModule } from './ScreenerModule';
 import { UniverseModule } from './UniverseModule';
 import { PortfolioBuilder } from './PortfolioBuilder';
+import GoalPlanningModule from './GoalPlanningModule';
 import { EXTENDED_MOCK_PRODUCTS } from './mockProducts';
 import { ReportGenerator } from './utils/ReportGenerator';
 import { DataExporter } from './utils/DataExporter';
@@ -29,6 +30,7 @@ const UserPlus = () => <Icon d="M16 21 L16 19 A4 4 0 0 0 12 15 L8 15 A4 4 0 0 0 
 const ToggleLeft = () => <Icon d="M1 12 A6 6 0 0 0 7 18 L17 18 A6 6 0 0 0 23 12 A6 6 0 0 0 17 6 L7 6 A6 6 0 0 0 1 12 M7 15 A3 3 0 1 1 7 9 A3 3 0 0 1 7 15" />;
 const ToggleRight = () => <Icon d="M1 12 A6 6 0 0 0 7 18 L17 18 A6 6 0 0 0 23 12 A6 6 0 0 0 17 6 L7 6 A6 6 0 0 0 1 12 M17 15 A3 3 0 1 1 17 9 A3 3 0 0 1 17 15" />;
 const Shield = () => <Icon d="M12 22 L12 22 C12 22 3 18 3 12 L3 5 L12 2 L21 5 L21 12 C21 18 12 22 12 22 Z" />;
+const Target = () => <Icon d="M12 22 A10 10 0 1 1 22 12 A10 10 0 0 1 12 22 M12 18 A6 6 0 1 1 18 12 A6 6 0 0 1 12 18 M12 14 A2 2 0 1 1 14 12 A2 2 0 0 1 12 14" />;
 const FileText = () => <Icon d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6 M16 13H8 M16 17H8 M10 9H8" />;
 const Download = () => <Icon d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M7 10l5 5 5-5 M12 15V3" />;
 const ChevronLeft = () => <Icon d="M15 18 L9 12 L15 6" />;
@@ -53,9 +55,9 @@ function App() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   
   const [portfolios, setPortfolios] = useState([
-    { id: 'P1', name: 'Conservative Growth', description: 'Low-risk capital preservation', riskLevel: 'Conservative', holdings: [{ productId: 'ETF001', weight: 60 }, { productId: 'MF001', weight: 30 }, { productId: 'MF003', weight: 10 }] },
-    { id: 'P2', name: 'Balanced Moderate', description: 'Growth and stability mix', riskLevel: 'Moderate', holdings: [{ productId: 'MF001', weight: 50 }, { productId: 'ETF001', weight: 40 }, { productId: 'MF002', weight: 10 }] },
-    { id: 'P3', name: 'Aggressive Growth', description: 'High-growth equity focus', riskLevel: 'Aggressive', holdings: [{ productId: 'ETF002', weight: 50 }, { productId: 'MF002', weight: 30 }, { productId: 'MF001', weight: 20 }] }
+    { id: 'P1', name: 'Conservative Growth', description: 'Low-risk capital preservation', riskLevel: 'Conservative', maxDrawdown: 10, holdings: [{ productId: 'ETF001', weight: 60 }, { productId: 'MF001', weight: 30 }, { productId: 'MF003', weight: 10 }] },
+    { id: 'P2', name: 'Balanced Moderate', description: 'Growth and stability mix', riskLevel: 'Moderate', maxDrawdown: 18, holdings: [{ productId: 'MF001', weight: 50 }, { productId: 'ETF001', weight: 40 }, { productId: 'MF002', weight: 10 }] },
+    { id: 'P3', name: 'Aggressive Growth', description: 'High-growth equity focus', riskLevel: 'Aggressive', maxDrawdown: 25, holdings: [{ productId: 'ETF002', weight: 50 }, { productId: 'MF002', weight: 30 }, { productId: 'MF001', weight: 20 }] }
   ]);
   const [showCreatePortfolio, setShowCreatePortfolio] = useState(false);
   const [newPortfolio, setNewPortfolio] = useState({ name: '', description: '', riskLevel: 'Moderate', holdings: [] });
@@ -80,7 +82,14 @@ function App() {
   const [previewAnswers, setPreviewAnswers] = useState({});
   const [newRisk, setNewRisk] = useState({ name: '', description: '', questions: [], scoringRules: [] });
 
-  // NEW: Advisor Management State
+  // Client Management State
+  const [clients, setClients] = useState([
+    { id: 'C1', name: 'Robert Johnson', email: 'robert.j@email.com', phone: '555-0123', riskProfile: 'Conservative', assignedAdvisor: 'U2', joinedDate: '2025-11-01', portfolioValue: 450000, status: 'Active' },
+    { id: 'C2', name: 'Emma Williams', email: 'emma.w@email.com', phone: '555-0124', riskProfile: 'Moderate', assignedAdvisor: 'U2', joinedDate: '2025-12-15', portfolioValue: 780000, status: 'Active' },
+    { id: 'C3', name: 'David Martinez', email: 'david.m@email.com', phone: '555-0125', riskProfile: 'Aggressive', assignedAdvisor: 'U1', joinedDate: '2026-01-10', portfolioValue: 1200000, status: 'Active' }
+  ]);
+
+  // User Management State
   const [users, setUsers] = useState([
     { id: 'U1', name: 'Sarah Chen', email: 'sarah.chen@finfiles.com', active: true, assignedPortfolios: ['P1', 'P2'], assignedRiskProfiles: ['R1'], permissions: 'Full Access', role: 'Admin', joinedDate: '2025-11-15' },
     { id: 'U2', name: 'Michael Rodriguez', email: 'michael.r@finfiles.com', active: true, assignedPortfolios: ['P2', 'P3'], assignedRiskProfiles: ['R1'], permissions: 'Full Access', role: 'Advisor', joinedDate: '2025-12-03' },
@@ -264,8 +273,8 @@ function App() {
         <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700, background: 'linear-gradient(135deg,#3b82f6,#8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>FinFiles Portfolio Builder</h1>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
-            {['screener', 'universe', 'portfolios', 'risk', 'clients', 'users'].map(tab => (
-              <button key={tab} onClick={() => setActiveTab(tab)} style={{ padding: '0.625rem 1.25rem', background: activeTab === tab ? 'rgba(59,130,246,0.2)' : 'transparent', border: activeTab === tab ? '1px solid rgba(59,130,246,0.4)' : '1px solid transparent', borderRadius: '8px', color: activeTab === tab ? '#60a5fa' : '#94a3b8', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem', transition: 'all 0.2s' }}>{tab === 'screener' ? '🔎 Screener' : tab === 'universe' ? '🌐 Universe' : tab === 'portfolios' ? '📊 Model Portfolios' : tab === 'risk' ? '⚖️ Risk Profiles' : tab === 'clients' ? '👨‍💼 Clients' : '👥 Users'}</button>
+            {['screener', 'universe', 'portfolios', 'risk', 'clients', 'goals', 'users'].map(tab => (
+              <button key={tab} onClick={() => setActiveTab(tab)} style={{ padding: '0.625rem 1.25rem', background: activeTab === tab ? 'rgba(59,130,246,0.2)' : 'transparent', border: activeTab === tab ? '1px solid rgba(59,130,246,0.4)' : '1px solid transparent', borderRadius: '8px', color: activeTab === tab ? '#60a5fa' : '#94a3b8', cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem', transition: 'all 0.2s' }}>{tab === 'screener' ? '🔎 Screener' : tab === 'universe' ? '🌐 Universe' : tab === 'portfolios' ? '📊 Model Portfolios' : tab === 'risk' ? '⚖️ Risk Profiles' : tab === 'clients' ? '👨‍💼 Clients' : tab === 'goals' ? '🎯 Goals' : '👥 Users'}</button>
             ))}
           </div>
         </div>
@@ -557,7 +566,11 @@ function App() {
         )}
 
         {activeTab === 'clients' && (
-          <ClientPortfolioModule products={products} portfolios={portfolios} />
+          <ClientPortfolioModule products={products} portfolios={portfolios} clients={clients} />
+        )}
+
+        {activeTab === 'goals' && (
+          <GoalPlanningModule clients={clients} portfolios={portfolios} riskProfiles={riskProfiles} />
         )}
 
         {activeTab === 'users' && (
