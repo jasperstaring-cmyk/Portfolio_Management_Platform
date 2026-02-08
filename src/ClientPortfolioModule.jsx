@@ -43,8 +43,8 @@ const PieChart = ({ data, size = 200 }) => {
   );
 };
 
-export function ClientPortfolioModule({ products, portfolios, clients: externalClients }) {
-  const [clients, setClients] = useState(externalClients || [
+export function ClientPortfolioModule({ products = [], portfolios = [], clients: externalClients }) {
+  const [clients, setClients] = useState((externalClients || [
     {
       id: 'C1',
       name: 'Robert Johnson',
@@ -63,7 +63,7 @@ export function ClientPortfolioModule({ products, portfolios, clients: externalC
       onboardedDate: '2026-01-22',
       goals: []
     }
-  ]);
+  ]).map(c => ({ ...c, goals: c.goals || [] })));
 
   const [selectedClient, setSelectedClient] = useState(null);
   const [showWizard, setShowWizard] = useState(false);
@@ -81,12 +81,14 @@ export function ClientPortfolioModule({ products, portfolios, clients: externalC
   };
 
   const getConsolidatedPortfolio = (client) => {
+    if (!client || !client.goals) return [];
+
     const consolidatedHoldings = {};
     let totalValue = 0;
 
     client.goals.forEach(goal => {
       const portfolio = portfolios.find(p => p.id === goal.portfolioId);
-      if (!portfolio) return;
+      if (!portfolio || !portfolio.holdings) return;
 
       const goalValue = goal.goalType === 'accumulation'
         ? (parseFloat(goal.targetAmount) || 0)
@@ -179,11 +181,11 @@ export function ClientPortfolioModule({ products, portfolios, clients: externalC
 
     setClients(clients.map(c =>
       c.id === selectedClient.id
-        ? { ...c, goals: [...c.goals, goalToAdd] }
+        ? { ...c, goals: [...(c.goals || []), goalToAdd] }
         : c
     ));
 
-    setSelectedClient({ ...selectedClient, goals: [...selectedClient.goals, goalToAdd] });
+    setSelectedClient({ ...selectedClient, goals: [...(selectedClient.goals || []), goalToAdd] });
     setShowAddGoal(false);
     setNewGoal({ name: '', targetAmount: 0, timeHorizon: '', portfolioId: '', useCustom: false, customHoldings: [] });
   };
@@ -192,10 +194,10 @@ export function ClientPortfolioModule({ products, portfolios, clients: externalC
     if (!confirm('Delete this investment goal?')) return;
     setClients(clients.map(c =>
       c.id === selectedClient.id
-        ? { ...c, goals: c.goals.filter(g => g.id !== goalId) }
+        ? { ...c, goals: (c.goals || []).filter(g => g.id !== goalId) }
         : c
     ));
-    setSelectedClient({ ...selectedClient, goals: selectedClient.goals.filter(g => g.id !== goalId) });
+    setSelectedClient({ ...selectedClient, goals: (selectedClient.goals || []).filter(g => g.id !== goalId) });
   };
 
   const generateClientReport = (client) => {
@@ -241,21 +243,21 @@ export function ClientPortfolioModule({ products, portfolios, clients: externalC
             </div>
             <div style={{ padding: '1.5rem', background: 'linear-gradient(135deg, rgba(16,185,129,0.1), rgba(16,185,129,0.05))', border: '1px solid rgba(16,185,129,0.3)', borderRadius: '12px' }}>
               <div style={{ fontSize: '0.75rem', color: '#10b981', marginBottom: '0.5rem', fontWeight: 600 }}>INVESTMENT GOALS</div>
-              <div style={{ fontSize: '2.5rem', fontWeight: 700 }}>{clients.reduce((sum, c) => sum + c.goals.length, 0)}</div>
+              <div style={{ fontSize: '2.5rem', fontWeight: 700 }}>{clients.reduce((sum, c) => sum + ((c.goals || []).length), 0)}</div>
             </div>
             <div style={{ padding: '1.5rem', background: 'linear-gradient(135deg, rgba(245,158,11,0.1), rgba(245,158,11,0.05))', border: '1px solid rgba(245,158,11,0.3)', borderRadius: '12px' }}>
               <div style={{ fontSize: '0.75rem', color: '#f59e0b', marginBottom: '0.5rem', fontWeight: 600 }}>TOTAL AUM</div>
-              <div style={{ fontSize: '2.5rem', fontWeight: 700 }}>${(clients.reduce((sum, c) => sum + c.goals.reduce((gsum, g) => gsum + g.targetAmount, 0), 0) / 1000000).toFixed(1)}M</div>
+              <div style={{ fontSize: '2.5rem', fontWeight: 700 }}>${(clients.reduce((sum, c) => sum + ((c.goals || []).reduce((gsum, g) => gsum + (parseFloat(g.targetAmount) || 0), 0)), 0) / 1000000).toFixed(1)}M</div>
             </div>
             <div style={{ padding: '1.5rem', background: 'linear-gradient(135deg, rgba(139,92,246,0.1), rgba(139,92,246,0.05))', border: '1px solid rgba(139,92,246,0.3)', borderRadius: '12px' }}>
               <div style={{ fontSize: '0.75rem', color: '#a78bfa', marginBottom: '0.5rem', fontWeight: 600 }}>AVG GOALS/CLIENT</div>
-              <div style={{ fontSize: '2.5rem', fontWeight: 700 }}>{clients.length ? (clients.reduce((sum, c) => sum + c.goals.length, 0) / clients.length).toFixed(1) : '0'}</div>
+              <div style={{ fontSize: '2.5rem', fontWeight: 700 }}>{clients.length ? (clients.reduce((sum, c) => sum + ((c.goals || []).length), 0) / clients.length).toFixed(1) : '0'}</div>
             </div>
           </div>
 
           <div style={{ display: 'grid', gap: '1rem' }}>
             {clients.map(client => {
-                const totalInvested = client.goals.reduce((sum, g) => sum + g.targetAmount, 0);
+                const totalInvested = (client.goals || []).reduce((sum, g) => sum + (parseFloat(g.targetAmount) || 0), 0);
                 return (
                   <div key={client.id} style={s.card} onClick={() => setSelectedClient(client)}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', cursor: 'pointer' }}>
@@ -314,10 +316,10 @@ export function ClientPortfolioModule({ products, portfolios, clients: externalC
               </div>
             ) : (
               <div style={{ marginTop: '2rem' }}>
-                 {selectedClient.goals.map(goal => (
+                 {(selectedClient.goals || []).map(goal => (
                    <div key={goal.id} style={{ marginBottom: '1rem', padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
-                     <h4>{goal.name}</h4>
-                     <p>${goal.targetAmount.toLocaleString()} - {goal.timeHorizon}</p>
+                     <h4>{goal.name || goal.goalName}</h4>
+                     <p>${(parseFloat(goal.targetAmount) || 0).toLocaleString()} - {goal.timeHorizon || goal.timeHorizonYears}</p>
                    </div>
                  ))}
               </div>
