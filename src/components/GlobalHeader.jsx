@@ -2,7 +2,6 @@ import React from 'react';
 
 const Icon = ({ d, size = 18 }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d={d}/></svg>;
 const Search = () => <Icon d="M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16z M21 21l-4.35-4.35" />;
-const ChevronDown = () => <Icon d="M6 9l6 6 6-6" size={16} />;
 
 const GlobalHeader = ({ activeTab, onTabChange }) => {
   const mainTabs = [
@@ -107,9 +106,10 @@ const GlobalHeader = ({ activeTab, onTabChange }) => {
 
           <div style={{
             flex: 1,
-            maxWidth: '500px',
+            maxWidth: '700px',
             position: 'relative',
-            minWidth: '300px'
+            minWidth: '300px',
+            marginLeft: 'auto'
           }}>
             <div style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#64748b' }}>
               <Search />
@@ -128,41 +128,6 @@ const GlobalHeader = ({ activeTab, onTabChange }) => {
                 fontFamily: 'inherit'
               }}
             />
-          </div>
-
-          <div style={{ display: 'flex', gap: '0.75rem', marginLeft: 'auto', flexWrap: 'wrap' }}>
-            <button style={{
-              padding: '0.875rem 1.25rem',
-              background: 'transparent',
-              border: '1px solid rgba(255,255,255,0.3)',
-              borderRadius: '8px',
-              color: '#fff',
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontSize: '0.875rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              fontFamily: 'inherit'
-            }}>
-              Selection lists <ChevronDown />
-            </button>
-            <button style={{
-              padding: '0.875rem 1.25rem',
-              background: 'transparent',
-              border: '1px solid rgba(255,255,255,0.3)',
-              borderRadius: '8px',
-              color: '#fff',
-              fontWeight: 600,
-              cursor: 'pointer',
-              fontSize: '0.875rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              fontFamily: 'inherit'
-            }}>
-              Model portfolios <ChevronDown />
-            </button>
           </div>
         </div>
       </div>
