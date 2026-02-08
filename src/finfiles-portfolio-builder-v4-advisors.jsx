@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ClientPortfolioModule } from './ClientPortfolioModule';
 import { ScreenerModule } from './ScreenerModule';
 import { UniverseModule } from './UniverseModule';
+import { PortfolioBuilder } from './PortfolioBuilder';
 import { EXTENDED_MOCK_PRODUCTS } from './mockProducts';
 
 const MOCK_PRODUCTS = [
@@ -107,6 +108,11 @@ function App() {
     if (!newPortfolio.name || !newPortfolio.holdings.length) return alert('Name and holdings required');
     const total = newPortfolio.holdings.reduce((s, h) => s + (parseFloat(h.weight) || 0), 0);
     if (Math.abs(total - 100) > 0.01) return alert(`Total must be 100%. Current: ${total.toFixed(1)}%`);
+    newPortfolio.holdings.forEach(holding => {
+      if (holding.productId) {
+        localStorage.setItem(`product_last_used_${holding.productId}`, Date.now().toString());
+      }
+    });
     setPortfolios([...portfolios, { ...newPortfolio, id: `P${portfolios.length + 1}` }]);
     setShowCreatePortfolio(false);
     setNewPortfolio({ name: '', description: '', riskLevel: 'Moderate', holdings: [] });
@@ -209,6 +215,9 @@ function App() {
               <p style={{ margin: '0.5rem 0 0', color: '#94a3b8', fontSize: '0.875rem' }}>Search and filter investment products to add to your universe</p>
             </div>
             <ScreenerModule allProducts={allProducts} universeProducts={universeProducts} onAddToUniverse={(products) => {
+              products.forEach(product => {
+                localStorage.setItem(`product_added_${product.id}`, Date.now().toString());
+              });
               setUniverseProducts([...universeProducts, ...products]);
               alert(`Added ${products.length} product${products.length !== 1 ? 's' : ''} to your universe!`);
             }} />
@@ -249,27 +258,21 @@ function App() {
                 </div>
               ))}</div>
             ) : (
-              <div style={s.card}>
-                <h3 style={{ margin: '0 0 1.5rem', fontSize: '1.25rem', fontWeight: 700 }}>Create New Portfolio</h3>
-                <div style={{ display: 'grid', gap: '1.5rem', marginBottom: '2rem' }}>
-                  <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem', color: '#94a3b8' }}>Portfolio Name</label><input type="text" value={newPortfolio.name} onChange={e => setNewPortfolio({ ...newPortfolio, name: e.target.value })} placeholder="e.g., Conservative Growth" style={s.input} /></div>
-                  <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem', color: '#94a3b8' }}>Description</label><input type="text" value={newPortfolio.description} onChange={e => setNewPortfolio({ ...newPortfolio, description: e.target.value })} placeholder="Brief description" style={s.input} /></div>
-                  <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem', color: '#94a3b8' }}>Risk Level</label><select value={newPortfolio.riskLevel} onChange={e => setNewPortfolio({ ...newPortfolio, riskLevel: e.target.value })} style={{ ...s.input, cursor: 'pointer' }}><option>Conservative</option><option>Moderate</option><option>Aggressive</option></select></div>
-                </div>
-
-                <div style={{ marginBottom: '2rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}><h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 600 }}>Holdings ({newPortfolio.holdings.reduce((s, h) => s + (parseFloat(h.weight) || 0), 0).toFixed(1)}% allocated)</h4><button onClick={addHolding} style={{ padding: '0.5rem 1rem', background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.3)', borderRadius: '8px', color: '#60a5fa', cursor: 'pointer', fontSize: '0.875rem', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '0.5rem' }}><PlusCircle />Add Holding</button></div>
-                  {!newPortfolio.holdings.length ? <div style={{ padding: '3rem', textAlign: 'center', background: 'rgba(15,23,42,0.4)', border: '2px dashed rgba(148,163,184,0.2)', borderRadius: '8px', color: '#64748b' }}>No holdings yet. Click "Add Holding" to start building your portfolio.</div> : <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>{newPortfolio.holdings.map((h, i) => (
-                    <div key={i} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr auto', gap: '1rem', alignItems: 'center', padding: '1rem', background: 'rgba(15,23,42,0.4)', border: '1px solid rgba(148,163,184,0.1)', borderRadius: '8px' }}>
-                      <select value={h.productId} onChange={e => updateHolding(i, 'productId', e.target.value)} style={{ ...s.input, cursor: 'pointer' }}><option value="">Select Product</option>{products.map(p => <option key={p.id} value={p.id}>{p.ticker} - {p.name}</option>)}</select>
-                      <input type="number" value={h.weight} onChange={e => updateHolding(i, 'weight', parseFloat(e.target.value))} placeholder="Weight %" min="0" max="100" step="0.1" style={s.input} />
-                      <button onClick={() => removeHolding(i)} style={{ padding: '0.5rem', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: '6px', color: '#ef4444', cursor: 'pointer' }}><Trash /></button>
-                    </div>
-                  ))}</div>}
-                </div>
-
-                <div style={{ display: 'flex', gap: '1rem' }}><button onClick={() => { setShowCreatePortfolio(false); setNewPortfolio({ name: '', description: '', riskLevel: 'Moderate', holdings: [] }); }} style={{ flex: 1, padding: '0.875rem', background: 'rgba(148,163,184,0.1)', border: '1px solid rgba(148,163,184,0.2)', borderRadius: '8px', color: '#f1f5f9', cursor: 'pointer', fontWeight: 500 }}>Cancel</button><button onClick={savePortfolio} style={{ flex: 1, ...s.btn }}>Save Portfolio</button></div>
-              </div>
+              <PortfolioBuilder
+                portfolios={portfolios}
+                universeProducts={universeProducts}
+                onSave={(portfolio) => {
+                  setPortfolios([...portfolios, portfolio]);
+                  setShowCreatePortfolio(false);
+                }}
+                onCancel={() => {
+                  setShowCreatePortfolio(false);
+                  setNewPortfolio({ name: '', description: '', riskLevel: 'Moderate', holdings: [] });
+                }}
+                getProductLabels={(productId) => {
+                  return JSON.parse(localStorage.getItem(`product_labels_${productId}`) || '{"tags":[],"available":true}');
+                }}
+              />
             )}
           </div>
         )}
