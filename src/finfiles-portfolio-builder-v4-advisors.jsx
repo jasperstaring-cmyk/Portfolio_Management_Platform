@@ -124,9 +124,14 @@ function App() {
   const deletePortfolio = (id) => { if (confirm('Delete portfolio?')) setPortfolios(portfolios.filter(p => p.id !== id)); };
 
   const generatePortfolioReport = (portfolio) => {
-    const reportGen = new ReportGenerator();
-    const doc = reportGen.generatePortfolioReport(portfolio, products);
-    doc.save(`${portfolio.name.replace(/\s+/g, '_')}_Report.pdf`);
+    try {
+      const reportGen = new ReportGenerator();
+      const doc = reportGen.generatePortfolioReport(portfolio, products);
+      doc.save(`${portfolio.name.replace(/\s+/g, '_')}_Report.pdf`);
+    } catch (error) {
+      console.error('Error generating report:', error);
+      alert('Error generating report. Please check the console for details.');
+    }
   };
 
   // Risk Profile Functions

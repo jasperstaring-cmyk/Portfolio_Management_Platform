@@ -198,10 +198,15 @@ export class ReportGenerator {
 
     this.addSection('Portfolio Overview');
     this.addText('Portfolio Name', portfolio.name);
-    this.addText('Type', portfolio.type);
+    if (portfolio.description) {
+      this.addText('Description', portfolio.description);
+    }
+    if (portfolio.riskLevel) {
+      this.addText('Risk Level', portfolio.riskLevel);
+    }
     this.addText('Holdings Count', portfolio.holdings.length.toString());
 
-    const totalWeight = portfolio.holdings.reduce((sum, h) => sum + h.weight, 0);
+    const totalWeight = portfolio.holdings.reduce((sum, h) => sum + (parseFloat(h.weight) || 0), 0);
     this.addText('Total Allocation', `${totalWeight.toFixed(1)}%`);
 
     const avgExpenseRatio = this.calculateAvgExpenseRatio(portfolio, products);
@@ -219,11 +224,12 @@ export class ReportGenerator {
     this.addSection('Holdings Detail');
     const holdingsData = portfolio.holdings.map(h => {
       const product = products.find(p => p.id === h.productId);
+      const weight = parseFloat(h.weight) || 0;
       return [
         product?.ticker || 'N/A',
         product?.name || 'Unknown',
         product?.assetClass || 'N/A',
-        `${h.weight.toFixed(1)}%`,
+        `${weight.toFixed(1)}%`,
         `${(product?.expenseRatio || 0).toFixed(2)}%`
       ];
     });
@@ -347,9 +353,10 @@ export class ReportGenerator {
 
     portfolio.holdings.forEach(h => {
       const product = products.find(p => p.id === h.productId);
+      const weight = parseFloat(h.weight) || 0;
       if (product && product.expenseRatio) {
-        totalExpense += product.expenseRatio * h.weight;
-        totalWeight += h.weight;
+        totalExpense += product.expenseRatio * weight;
+        totalWeight += weight;
       }
     });
 
@@ -361,8 +368,9 @@ export class ReportGenerator {
 
     portfolio.holdings.forEach(h => {
       const product = products.find(p => p.id === h.productId);
+      const weight = parseFloat(h.weight) || 0;
       if (product) {
-        allocation[product.assetClass] = (allocation[product.assetClass] || 0) + h.weight;
+        allocation[product.assetClass] = (allocation[product.assetClass] || 0) + weight;
       }
     });
 
@@ -398,7 +406,8 @@ export class ReportGenerator {
         if (!product) return;
 
         const assetClass = product.assetClass;
-        const allocationPercent = (holding.weight / 100) * goalWeight * 100;
+        const weight = parseFloat(holding.weight) || 0;
+        const allocationPercent = (weight / 100) * goalWeight * 100;
 
         allocation[assetClass] = (allocation[assetClass] || 0) + allocationPercent;
       });
