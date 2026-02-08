@@ -5,7 +5,7 @@ import { UniverseModule } from './UniverseModule';
 import { PortfolioBuilder } from './PortfolioBuilder';
 import GoalPlanningModule from './GoalPlanningModule';
 import DashboardHome from './DashboardHome';
-import AppHeader from './components/AppHeader';
+import GlobalHeader from './components/GlobalHeader';
 import { EXTENDED_MOCK_PRODUCTS } from './mockProducts';
 import { ReportGenerator } from './utils/ReportGenerator';
 import { DataExporter } from './utils/DataExporter';
@@ -272,17 +272,13 @@ function App() {
 
   return (
     <div style={{ minHeight: '100vh', background: colors.background.primary, color: colors.text.primary, fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif' }}>
-      {activeTab !== 'home' && <AppHeader activeTab={activeTab} onTabChange={setActiveTab} />}
+      <GlobalHeader activeTab={activeTab} onTabChange={setActiveTab} />
 
-      <main style={{ maxWidth: '1600px', margin: '0 auto', padding: activeTab === 'home' ? '0' : '2rem 3rem' }}>
-        {activeTab === 'home' && <DashboardHome onNavigate={setActiveTab} />}
+      <main style={{ maxWidth: '1600px', margin: '0 auto', padding: '2rem 3rem' }}>
+        {activeTab === 'home' && <DashboardHome />}
 
         {activeTab === 'screener' && (
           <div>
-            <div style={{ marginBottom: '2rem' }}>
-              <h2 style={styles.sectionTitle}>Product Screener</h2>
-              <p style={styles.sectionSubtitle}>Search and filter investment products to add to your universe</p>
-            </div>
             <ScreenerModule allProducts={allProducts} universeProducts={universeProducts} onAddToUniverse={(products) => {
               products.forEach(product => {
                 localStorage.setItem(`product_added_${product.id}`, Date.now().toString());
@@ -295,10 +291,6 @@ function App() {
 
         {activeTab === 'universe' && (
           <div>
-            <div style={{ marginBottom: '2rem' }}>
-              <h2 style={styles.sectionTitle}>Product Universe</h2>
-              <p style={styles.sectionSubtitle}>Manage and organize your investment product universe</p>
-            </div>
             <UniverseModule
               universeProducts={universeProducts}
               portfolios={portfolios}
@@ -315,8 +307,7 @@ function App() {
 
         {activeTab === 'portfolios' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-              <div><h2 style={styles.sectionTitle}>Model Portfolios</h2><p style={styles.sectionSubtitle}>Create and manage portfolio templates</p></div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '2rem' }}>
               {!showCreatePortfolio && <button onClick={() => setShowCreatePortfolio(true)} style={s.btn}><PlusCircle />Create Portfolio</button>}
             </div>
 
@@ -429,8 +420,7 @@ function App() {
 
         {activeTab === 'risk' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-              <div><h2 style={styles.sectionTitle}>Risk Profile Builder</h2><p style={styles.sectionSubtitle}>Create risk questionnaires and scoring rules</p></div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '2rem' }}>
               {!showCreateRisk && <button onClick={() => setShowCreateRisk(true)} style={s.btn}><PlusCircle />Create Risk Profile</button>}
             </div>
 
@@ -571,11 +561,7 @@ function App() {
 
         {activeTab === 'users' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-              <div>
-                <h2 style={styles.sectionTitle}>User Management</h2>
-                <p style={styles.sectionSubtitle}>Manage system users and their roles</p>
-              </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '2rem' }}>
               {!showCreateUser && (
                 <button onClick={() => setShowCreateUser(true)} style={s.btn}>
                   <UserPlus />Add User
