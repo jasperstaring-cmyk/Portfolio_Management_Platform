@@ -29,7 +29,11 @@ const GlobalHeader = ({ activeTab, onTabChange }) => {
             <img
               src="/src/assets/image.png"
               alt="FinFiles"
-              style={{ height: '40px', width: 'auto' }}
+              style={{
+                height: '60px',
+                width: 'auto',
+                mixBlendMode: 'screen'
+              }}
             />
           </div>
           <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
