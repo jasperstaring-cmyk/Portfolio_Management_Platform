@@ -25,22 +25,12 @@ const GlobalHeader = ({ activeTab, onTabChange }) => {
     }}>
       <div style={{ padding: '2rem 3rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <div style={{
-              width: '40px',
-              height: '40px',
-              background: '#fff',
-              borderRadius: '4px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontWeight: 700,
-              color: '#1e40af',
-              fontSize: '1.25rem'
-            }}>
-              F
-            </div>
-            <span style={{ fontSize: '0.875rem', color: '#fff', fontWeight: 600 }}>FinFiles Investment Suite</span>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <img
+              src="/src/assets/image.png"
+              alt="FinFiles"
+              style={{ height: '40px', width: 'auto' }}
+            />
           </div>
           <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
             <span style={{ color: '#e0e7ff', fontSize: '0.875rem', cursor: 'pointer' }}>English</span>
