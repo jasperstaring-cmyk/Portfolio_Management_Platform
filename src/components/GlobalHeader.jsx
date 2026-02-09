@@ -25,17 +25,16 @@ const GlobalHeader = ({ activeTab, onTabChange }) => {
     }}>
       <div style={{ padding: '2rem 3rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <img
-              src="/src/assets/image.png"
-              alt="FinFiles"
-              style={{
-                height: '60px',
-                width: 'auto',
-                mixBlendMode: 'screen'
-              }}
-            />
-          </div>
+          <img
+            src="/src/assets/image.png"
+            alt="FinFiles"
+            style={{
+              height: '70px',
+              width: 'auto',
+              mixBlendMode: 'lighten',
+              filter: 'brightness(1.2) contrast(1.1)'
+            }}
+          />
           <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
             <span style={{ color: '#e0e7ff', fontSize: '0.875rem', cursor: 'pointer' }}>English</span>
             <span style={{ color: '#e0e7ff', fontSize: '0.875rem', cursor: 'pointer' }}>Settings</span>
